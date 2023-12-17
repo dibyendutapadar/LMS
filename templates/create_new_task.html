@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h2>Create New Task</h2>
+    <form action="{{ url_for('submit_new_task') }}" method="post">
+        <div class="form-group">
+            <label for="taskArea">Task Area</label>
+            <select class="form-control" id="taskArea" name="taskArea" required>
+                <option value="Question">Question</option>
+                <option value="Assessment">Assessment</option>
+                <option value="Content">Content</option>
+                <option value="Course">Course</option>
+                <option value="Event">Event</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="taskDeadline">Task Deadline</label>
+            <input type="datetime-local" class="form-control" id="taskDeadline" name="taskDeadline" required>
+        </div>
+        <div class="form-group">
+            <label for="taskTitle">Task Title</label>
+            <input type="text" class="form-control" id="taskTitle" name="taskTitle" required>
+        </div>
+        <div class="form-group">
+            <label for="taskRequirement">Task Requirement</label>
+            <textarea class="form-control" id="taskRequirement" name="taskRequirement" required></textarea>
+        </div>
+        <div class="form-group">
+            <label for="creatorEmail">Creator Email</label>
+            <select class="form-control" id="creatorEmail" name="creatorEmail">
+                {% for user in users %}
+                    <option value="{{ user.email }}">{{ user.userEemail }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="assigneeEmail">Assignee Email</label>
+            <select class="form-control" id="assigneeEmail" name="assigneeEmail">
+                <option value="">None</option>
+                {% for user in users %}
+                    <option value="{{ user.email }}">{{ user.userEmail }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+
+        <button type="submit" class="btn btn-primary">Submit</button>
+    </form>
+{% endblock %}

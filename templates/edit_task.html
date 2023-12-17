@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h2>Edit Task</h2>
+    <form action="{{ url_for('update_task', task_id=task.taskId) }}" method="post">
+        <!-- Form fields for each task attribute -->
+        <!-- Example for taskTitle -->
+        <div class="form-group">
+            <label for="taskTitle">Task Title</label>
+            <input type="text" class="form-control" id="taskTitle" name="taskTitle" value="{{ task.taskTitle }}" required>
+        </div>
+        <div class="form-group">
+            <label for="taskDeadline">Task Deadline</label>
+            <input type="datetime-local" class="form-control" id="taskDeadline" name="{{ task.taskDeadline }}" required>
+        </div>
+        <div class="form-group">
+            <label for="taskRequirement">Task Requirement</label>
+            <textarea class="form-control" id="taskRequirement" name="{{task.taskRequirement}}" required></textarea>
+        </div>
+        <!-- Include other fields similarly -->
+        <button type="submit" class="btn btn-primary">Update</button>
+    </form>
+{% endblock %}

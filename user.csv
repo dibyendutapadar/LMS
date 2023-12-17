@@ -1,0 +1,5 @@
+userName,userEmail,userPassword,userRole
+admin,admin@mail.com,password,Admin
+author,author@mail.com,password,Author
+instructor,instructor@mail.com,password,Instructor
+learner,learner@mail.com,password,Learner

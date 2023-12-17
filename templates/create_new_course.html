@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% block title %}Create New Course{% endblock %}
+{% block style %}
+body {
+    font-family: Arial, sans-serif;
+}
+.container {
+    width: 80%;
+    margin: 0 auto;
+}
+form {
+    margin-top: 20px;
+}
+form div {
+    margin-bottom: 10px;
+}
+label {
+    display: block;
+    margin-bottom: 5px;
+}
+input[type="text"],
+textarea,
+select {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+button {
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+button:hover {
+    background-color: #0056b3;
+}
+{% endblock %}
+
+{% block content %}
+<div class="container">
+  <h1>Create New Course</h1>
+  <form action="{{ url_for('create_new_course') }}" method="post">
+      <div>
+          <label for="courseTitle">Course Title</label>
+          <input type="text" id="courseTitle" name="courseTitle" required>
+      </div>
+      <div>
+          <label for="courseDescription">Course Description</label>
+          <textarea id="courseDescription" name="courseDescription" required></textarea>
+      </div>
+      <div>
+          <label for="courseCategory">Course Category</label>
+          <select id="courseCategory" name="courseCategory" required>
+              <option value="">Select a Category</option>
+              <!-- Add options here -->
+          </select>
+      </div>
+      <div>
+          <label for="courseSubCategory">Course SubCategory</label>
+          <select id="courseSubCategory" name="courseSubCategory" required>
+              <option value="">Select a SubCategory</option>
+              <!-- Add options here -->
+          </select>
+      </div>
+      <button type="submit">Create Course</button>
+  </form>
+</div>
+
+{% endblock %}

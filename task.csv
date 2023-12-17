@@ -1,0 +1,7 @@
+taskArea,taskDeadline,taskTitle,taskRequirement,isDeleted,createdBy,creatorEmail,assigneeId,assigneeEmail
+Question,2023-12-12,10 questions for Entity,10 questions,0,1,admin@mail.com,2,author@mail.com
+Question,2023-12-12,10 questions for GSI,10 questions,0,1,admin@mail.com,2,author@mail.com
+Question,2023-12-12,10 questions for CU,10 questions,0,1,admin@mail.com,2,author@mail.com
+Content,2023-12-12,Entity,doc file,0,1,admin@mail.com,2,author@mail.com
+Content,2023-12-12,GSI,doc file,0,1,admin@mail.com,2,author@mail.com
+Content,2023-12-12,CU,doc file,0,1,admin@mail.com,2,author@mail.com
