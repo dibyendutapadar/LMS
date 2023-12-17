@@ -3,9 +3,15 @@ import sqlite3
 import math
 from flask import request
 from werkzeug.routing import BuildError
+from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import create_engine, Column, Integer, String, Text
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
 
 
 app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///LMS.db'
+db = SQLAlchemy(app)
 
 # Route for the admin dashboard
 @app.route('/')
@@ -116,6 +122,33 @@ def update_task(task_id):
     # ...
     return 0
 
+Base = declarative_base()
+engine = create_engine('sqlite:///LMS.db')
+Base.metadata.bind = engine
+DBSession = sessionmaker(bind=engine)
+
+class Course(db.Model):
+    __tablename__ = 'course'
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text, nullable=False)
+    category = db.Column(db.String(100), nullable=False)
+    sub_category = db.Column(db.String(100), nullable=False)
+    blocks = db.relationship('Block', backref='course', lazy=True)
+
+class Block(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(100), nullable=False)
+    course_id = db.Column(db.Integer, db.ForeignKey('course.id'), nullable=False)
+    parent_block_id = db.Column(db.Integer, db.ForeignKey('block.id'), nullable=True)
+    children = db.relationship('Block')
+    contents = db.relationship('Content', backref='block', lazy=True)
+
+class Content(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(100), nullable=False)
+    text = db.Column(db.Text, nullable=False)
+    block_id = db.Column(db.Integer, db.ForeignKey('block.id'), nullable=False)
 
 
 
@@ -127,14 +160,24 @@ def create_new_course():
         category = request.form['courseCategory']
         sub_category = request.form['courseSubCategory']
 
+       
+        
         new_course = Course(title=title, description=description, category=category, sub_category=sub_category)
-        db.session.add(new_course)
-        db.session.commit()
-
-        return redirect(url_for('edit_course', course_id=new_course.id))
+        
+        session = DBSession()
+        session.add(new_course)
+        session.commit()
+        print(f"Course '{title}' added successfully.")
+        new_course_id = new_course.id
+        session.close()
+        return redirect(url_for('edit_course', course_id=new_course_id))
 
     return render_template('create_new_course.html')
 
+@app.route('/course/edit_course/<int:course_id>')
+def edit_course(course_id):
+    # Logic to edit the course
+    return f"Edit course page for course ID {course_id}"
 
 
 
