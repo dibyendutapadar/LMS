@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, jsonify
+from flask import Flask, render_template, request, redirect, url_for, jsonify, session
 import sqlite3
 import math
 from flask import request
@@ -10,9 +10,13 @@ from sqlalchemy.orm import sessionmaker
 import sqlalchemy.orm
 from sqlalchemy.orm import backref
 from sqlalchemy.orm import relationship
+import pandas as pd
+import os
+from datetime import datetime
 
 
 app = Flask(__name__)
+app.secret_key = os.urandom(24)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///LMS.db'
 db = SQLAlchemy(app)
 
@@ -140,6 +144,7 @@ class Course(db.Model):
     blocks = db.relationship('Block', backref='course', lazy=True)
 
 class Block(db.Model):
+    __tablename__ = 'block'
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(100), nullable=False)
     course_id = db.Column(db.Integer, db.ForeignKey('course.id'), nullable=False)
@@ -151,10 +156,54 @@ class Block(db.Model):
     contents = db.relationship('Content', backref='block', lazy=True)
 
 class Content(db.Model):
+    __tablename__ = 'content'
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(100), nullable=False)
     text = db.Column(db.Text, nullable=False)
     block_id = db.Column(db.Integer, db.ForeignKey('block.id'), nullable=False)
+
+class Category(db.Model):
+    __tablename__='category'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), unique=True, nullable=False)
+    # Relationship with SubCategory
+    subcategories = db.relationship('SubCategory', backref='category', lazy=True)
+
+class SubCategory(db.Model):
+    __tablename__='subCategory'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), unique=True, nullable=False)
+    category_id = db.Column(db.Integer, db.ForeignKey('category.id'), nullable=False)
+
+class User(db.Model):
+    __tablename__ = 'user'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    usertype = db.Column(db.Enum('Admin', 'Author', 'Learner', name='usertype_enum'), nullable=False)
+    userName = db.Column(db.String(100), nullable=False, unique=True)
+    userPassword = db.Column(db.String(100), nullable=False)
+
+class Enrollment(db.Model):
+    __tablename__ = 'enrollment'
+    id = db.Column(db.Integer, primary_key=True)
+    learner_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    course_id = db.Column(db.Integer, db.ForeignKey('course.id'), nullable=False)
+    content_id = db.Column(db.PickleType, nullable=False)  # Storing list of content IDs
+    status = db.Column(db.Enum('enrolled', 'inprogress', 'completed', name='status_enum'), default='enrolled', nullable=False)
+
+    learner = db.relationship('User', backref='enrollments')
+    course = db.relationship('Course', backref='enrollments')
+
+
+class LearnerActivity(db.Model):
+    __tablename__ = 'learner_activity'
+    
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    learner_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    content_id = db.Column(db.Integer, db.ForeignKey('content.id'), nullable=False)
+    activity = db.Column(db.Enum('initialized', 'terminated', 'marked_completed', name='activity_types'), nullable=False)
+    status = db.Column(db.Enum('enrolled', 'inprogress', 'completed', name='status_types'), nullable=False)
+    percentage_complete = db.Column(db.Float, nullable=False)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
 
 with app.app_context():
     db.create_all()
@@ -176,7 +225,10 @@ def create_new_course():
         
         return redirect(url_for('edit_course', course_id=new_course_id))
 
-    return render_template('create_new_course.html')  # This should render the template to create a new course
+    categories_df = pd.read_csv('category_sub_category.csv')
+    categories = categories_df['Categories'].unique().tolist()
+    subcategories = categories_df.groupby('Categories')['Sub-Categories'].apply(list).to_dict()
+    return render_template('create_new_course.html', categories=categories,subcategories=subcategories)  # This should render the template to create a new course
 
 @app.route('/course/edit_course/<int:course_id>', methods=['GET', 'POST'])
 def edit_course(course_id):
@@ -269,6 +321,12 @@ def get_content(contentId):
     else:
         return jsonify({'error': 'Content not found'}), 404
 
+
+
+
+
+
+
 @app.route('/course/edit_course/update_content/', methods=['POST'])
 def update_content():
     content_id = request.form.get('content_id')
@@ -329,6 +387,157 @@ def add_new_content():
         return redirect(url_for('edit_course', course_id=new_course_id))
 
     return render_template('create_new_course.html')  # This should render the template to create a new course
+
+@app.route('/learners/view_learners')
+def view_learners():
+    users = User.query.all()
+    return render_template('view_learners.html', users=users)
+
+@app.route('/learners/view_activities')
+def view_activities():
+    activities = LearnerActivity.query.all()
+    return render_template('view_logs.html', activities=activities)
+
+
+#------------------------------------------------------------------------------------------------------------------------------------------------
+#-----------------------------------------LEARNER SIDE-------------------------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------------------------------------------------------------------------
+
+@app.route('/learner/signup', methods=['GET', 'POST'])
+def signup():
+    if request.method == 'POST':
+        # Extract data from form
+        usertype = request.form['usertype']
+        userName = request.form['userName']
+        userPassword = request.form['userPassword']
+
+        # Create new User object
+        new_user = User(usertype=usertype, userName=userName, userPassword=userPassword)
+
+        # Add to database
+        db.session.add(new_user)
+        db.session.commit()
+
+        return redirect(url_for('learner_login'))
+    return render_template('signup.html')
+
+@app.route('/learner/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        userName = request.form['userName']
+        userPassword = request.form['userPassword']
+
+        # Validate user
+        user = User.query.filter_by(userName=userName, userPassword=userPassword).first()
+        if user:
+            session['current_learner_id'] = user.id
+            return redirect(url_for('learner_home'))
+        else:
+            return 'Invalid username or password'
+
+    return redirect(url_for('learner_home'))
+
+@app.route('/learner')
+def learner_login():
+    return render_template('login.html')
+
+@app.route('/learner/home')
+def learner_home():
+    courses = Course.query.all()
+    current_user_id = session.get('current_learner_id')
+    enrolled_courses = Enrollment.query.filter_by(learner_id=current_user_id).all()
+    enrolled_course_ids = [enrollment.course_id for enrollment in enrolled_courses]
+    return render_template('learner_home.html', courses=courses, enrolled_course_ids=enrolled_course_ids)
+
+@app.route('/course/<int:course_id>')
+def course_page(course_id):
+    course = Course.query.get_or_404(course_id)
+    current_user_id = session.get('current_learner_id')  # Replace with your session management logic
+    user_enrolled = Enrollment.query.filter_by(learner_id=current_user_id, course_id=course_id).first() is not None
+    return render_template('course_page.html', course=course, user_enrolled=user_enrolled)
+
+
+@app.route('/enroll/<int:course_id>')
+def enroll(course_id):
+    current_user_id = session.get('current_learner_id')
+    # Check if the user is already enrolled
+    existing_enrollment = Enrollment.query.filter_by(learner_id=current_user_id, course_id=course_id).first()
+    if existing_enrollment:
+    # User is already enrolled, redirect to course page
+        return redirect(url_for('course_page', course_id=course_id))
+
+# Get all content IDs from the course
+    content_ids = [content.id for content in Content.query.filter_by(block_id=Block.query.filter_by(course_id=course_id).first().id).all()]
+
+# Create a new enrollment
+    new_enrollment = Enrollment(
+        learner_id=current_user_id,
+        course_id=course_id,
+        content_id=content_ids,
+        status='enrolled'
+    )
+
+# Add to database
+    db.session.add(new_enrollment)
+    db.session.commit()
+
+    return redirect(url_for('course_page', course_id=course_id))
+
+
+@app.route('/course/<int:course_id>/resume')
+def learn_course(course_id):
+    course = Course.query.get_or_404(course_id)
+    return render_template('learn_course.html', course=course)
+
+
+
+def get_learner_activity_status(learner_id, content_id):
+    # Query your LearnerActivity model
+    activity = LearnerActivity.query.filter_by(
+        learner_id=learner_id,
+        content_id=content_id,
+        status='completed'
+    ).first()
+    return 'completed' if activity else 'Not Completed'
+
+
+@app.route('/course/learn_course/get_content/<int:content_id>')
+def learn_get_content(content_id):
+    current_learner_id = session.get('current_learner_id')
+    # Assume get_content_details and get_learner_activity_status are defined appropriately
+    content = Content.query.get(content_id)
+    completion_status = get_learner_activity_status(current_learner_id, content_id)
+   
+    data = {
+        'id': content.id,
+        'title': content.title,
+        'text': content.text,
+        'block_id': content.block_id,
+        'completed': completion_status == 'completed'
+    }
+
+    return jsonify(data)
+
+@app.route('/log_activity', methods=['POST'])
+def log_activity():
+    data = request.json
+    new_activity = LearnerActivity(
+        learner_id=data['learner_id'],
+        content_id=data['content_id'],
+        activity=data['activity'],
+        status=data['status'],
+        percentage_complete=data['percentage_complete'],
+        timestamp=datetime.utcnow()
+    )
+    db.session.add(new_activity)
+    db.session.commit()
+    return jsonify({"status": "success"}), 200
+
+@app.route('/logout')
+def logout():
+    # Remove current_learner_id from session
+    session.pop('current_learner_id', None)
+    return redirect(url_for('learner_login'))
 
 
 # @app.errorhandler(404)

@@ -18,7 +18,7 @@
         border: 1px solid #ccc;
         padding: 10px;
         border-radius: 5px;
-        width: 70%;
+        width: 99%;
         margin-right: 10px;
     }
 
@@ -57,7 +57,7 @@
     }
 
     .block-content {
-        display: none;
+        display: block;
         padding-left: 20px;
     }
 
@@ -110,10 +110,14 @@
         display: flex;
     }
 
-    .box {
-        width: 50%;
+    .box-left {
+        width: 30%;
         /* Adjust the width as needed */
         /* Add additional styling if needed */
+    }
+
+    .box-right {
+        width: 70%
     }
 
     .content-block {
@@ -127,6 +131,29 @@
     .content-block:hover {
         background-color: #f8f9fa;
     }
+
+    form {
+        margin-top: 20px;
+    }
+
+    form div {
+        margin-bottom: 10px;
+    }
+
+    label {
+        display: block;
+        margin-bottom: 5px;
+    }
+
+    input[type="text"],
+    textarea,
+    select {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 10px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
 </style>
 {% endblock %}
 <!-- Add your meta tags, title, and CSS links -->
@@ -134,7 +161,7 @@
 
 {% block content %}
 <div class="container-box">
-    <div class="box">
+    <div class="box box-left">
         <div class="course-structure">
             {% macro render_block(block) %}
             <div class="block-accordion">
@@ -145,8 +172,10 @@
                         <span>{{ block.title }}</span>
                     </div>
                     <div class="block-action-new">
-                        <a href="#" onclick="addChildBlock({{ block.id }})" class="">+ Child Block</a>
-                        <a href="#" onclick="addContent({{ block.id }})" class="">+ Content</a>
+                        <a href="#" onclick="addChildBlock({{ block.id }})" class="">+ Child Block | </a>
+                        <a href="#" onclick="addContent({{ block.id }})" class="">+ Content | </a>
+                        <a href="#" onclick="addAssessment({{ block.id }})" class="">+ Assessment |</a>
+                        <a href="#" onclick="deleteBlock({{ block.id }})" class="">- Delete</a>
                     </div>
                 </div>
                 <div id="block-content-{{ block.id }}" class="block-content">
@@ -167,12 +196,14 @@
             {% endmacro %}
 
             {% for block in course.blocks %}
+            {% if block.parent_block_id is none %}
             {{ render_block(block) }}
+            {% endif %}
             {% endfor %}
         </div>
         <button class="add-block-btn" onclick="addBlock()">Add Block</button>
     </div>
-    <div class="box">
+    <div class="box box-right">
         <div class="edit-panel">
             <!-- This is where the form to create/edit blocks and content will appear -->
         </div>
@@ -279,6 +310,7 @@
     }
 
     function addContent(blockId) {
+        
         // Create the form HTML
         var formHtml = `
       <form id="add-content-form">
@@ -332,16 +364,17 @@
         fetch(`/course/edit_course/get_content/${contentId}`)
             .then(response => response.json())
             .then(data => {
+                console.log(data);
                 var formHtml = `
                 <form id="edit-content-form">
-                    <input type="hidden" name="content_id" value="${contentId}">
+                    <input type="hidden" name="content_id" value="${data.id}">
                     <div>
                         <label for="content_title">Content Title:</label>
-                        <input type="text" id="content_title" name="content_title" required value="${data.content_title}">
+                        <input type="text" id="content_title" name="content_title" required value="${data.title}">
                     </div>
                     <div>
                         <label for="content_text">Content Text:</label>
-                        <textarea id="content_text" name="content_text" required>${data.content_text}</textarea>
+                        <textarea id="content_text" name="content_text" required>${data.text}</textarea>
                     </div>
                     <div>
                         <button type="button" onclick="submitEditContentForm()">Update</button>
@@ -363,13 +396,28 @@
                 method: 'POST',
                 body: formData
             })
-            .then(response => response.json())
-            .then(data => {
-                // Handle the response after update
+            .then(response => {
+                if (response.ok) {
+                    location.reload(); // Reload the page on successful response
+                } else {
+                    throw new Error('Network response was not ok.');
+                }
             })
             .catch(error => {
                 console.error('Error:', error);
+                alert('There was a problem with the request.');
             });
     }
+
+
+    function addAssessment(blockId) {
+        console.log("coming")
+    }
+
+    function deleteBlock(blockId) {
+        console.log("coming")
+    }
+
+
 </script>
 {% endblock %}

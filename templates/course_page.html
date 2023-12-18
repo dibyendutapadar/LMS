@@ -1,0 +1,87 @@
+{% extends "learner_base.html" %}
+
+ {% block stylesheets %}
+<style> 
+ body {
+    background-color: #f8f9fa;
+}
+.course-header {
+    background-color: #fff;
+    padding: 2rem;
+    margin-bottom: 1rem;
+}
+.course-nav {
+    background-color: #fff;
+    padding: 0.5rem 0;
+    margin-bottom: 1rem;
+}
+.course-content {
+    background-color: #fff;
+    padding: 2rem;
+}
+.info-box {
+    background-color: #f8f9fa;
+    border: 1px solid #e1e1e1;
+    padding: 1rem;
+    border-radius: 5px;
+    margin-bottom: 1rem;
+}
+.btn {
+    padding: 0.5rem 1rem;
+    border-radius: 5px;
+    text-decoration: none;
+}
+</style>
+ 
+ {% endblock %}
+
+
+
+{% block content %}
+<div class="course-header">
+    <h1>{{ course.title }}</h1>
+    <p>{{ course.description }}</p>
+    <h5>Category: {{ course.category }}</h5>
+    <h6>Sub-Category: {{ course.sub_category }}</h6>
+    {% if user_enrolled %}
+    <a href="/course/{{ course.id }}/resume" class="btn btn-success">Resume</a>
+    {% else %}
+    <a href="/enroll/{{ course.id }}" class="btn btn-primary">Enroll</a>
+    {% endif %}
+    <!-- Additional details -->
+</div>
+
+<!-- Course Navigation -->
+<div class="course-nav">
+    <nav class="nav nav-pills nav-fill">
+        <a class="nav-item nav-link active" href="#about">About</a>
+        <a class="nav-item nav-link" href="#outcomes">Outcomes</a>
+        <a class="nav-item nav-link" href="#courses">Courses</a>
+        <a class="nav-item nav-link" href="#testimonials">Testimonials</a>
+    </nav>
+</div>
+
+<!-- Course Content -->
+<div class="course-content">
+    <div class="row">
+        <!-- Main content -->
+        <div class="col-md-8">
+            <h2>About the course</h2>
+            <p>What you'll learn...</p>
+            <!-- Skills, outcomes, etc. -->
+        </div>
+
+        <!-- Sidebar for course details like reviews, level, duration, etc. -->
+        <div class="col-md-4">
+            <div class="info-box">
+                <h3>4.6 ⭐ (67,386 reviews)</h3>
+                <p>Beginner level</p>
+                <p>5 months at 10 hours a week</p>
+                <p>Flexible schedule</p>
+                <p>Earn degree credit</p>
+                <a href="#" class="enroll-btn">Enroll</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

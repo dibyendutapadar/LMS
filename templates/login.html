@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(to right, #667eea, #764ba2);
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .login-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+        .login-container label {
+            display: block;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+        .login-container input {
+            width: 100%;
+            padding: 0.75rem;
+            margin-bottom: 1rem;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .login-container input[type="submit"] {
+            background-color: #667eea;
+            color: white;
+            border: none;
+            cursor: pointer;
+            margin-bottom: 1rem;
+        }
+        .social-buttons {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 1rem;
+        }
+        .social-buttons button {
+            border: 0;
+            background: none;
+            margin: 0 0.5rem;
+            cursor: pointer;
+        }
+        .social-buttons img {
+            width: 32px;
+            height: 32px;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <h2>Login</h2>
+        <form action="/learner/login" method="post">
+            <label for="userName">Username</label>
+            <input type="text" id="userName" name="userName" placeholder="Type your username" required>
+            
+            <label for="userPassword">Password</label>
+            <input type="password" id="userPassword" name="userPassword" placeholder="Type your password" required>
+            
+            <input type="submit" value="LOGIN">
+        </form>
+        <div class="social-buttons">
+            <button><img src="facebook_icon.png" alt="Facebook"></button>
+            <button><img src="twitter_icon.png" alt="Twitter"></button>
+            <button><img src="google_icon.png" alt="Google"></button>
+        </div>
+        <div>
+            <a href="/signup">SIGN UP</a>
+        </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+</body>
+</html>

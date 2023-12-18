@@ -55,21 +55,47 @@ button:hover {
           <textarea id="courseDescription" name="courseDescription"></textarea>
       </div>
       <div>
-          <label for="courseCategory">Course Category</label>
-          <select id="courseCategory" name="courseCategory">
-              <option value="">Select a Category</option>
-              <!-- Add options here -->
-          </select>
+        <label for="courseCategory">Category:</label>
+        <select id="courseCategory" name="courseCategory" onchange="updateSubcategories()">
+            {% for category in categories %}
+            <option value="{{ category }}">{{ category }}</option>
+            {% endfor %}
+        </select>
       </div>
       <div>
-          <label for="courseSubCategory">Course SubCategory</label>
-          <select id="courseSubCategory" name="courseSubCategory">
-              <option value="">Select a SubCategory</option>
-              <!-- Add options here -->
-          </select>
+        <label for="courseSubCategory">Subcategory:</label>
+        <select id="courseSubCategory" name="courseSubCategory"></select>
       </div>
       <button type="submit">Create Course</button>
   </form>
 </div>
 
 {% endblock %}
+
+{% block script %}
+<script type="text/javascript">
+    // Function to update subcategories based on selected category
+    function updateSubcategories() {
+        var selectedCategory = document.getElementById("courseCategory").value;
+        var subcategories = {{ subcategories | tojson }};
+        var subcategorySelect = document.getElementById("courseSubCategory");
+
+        subcategorySelect.innerHTML = ''; // Clear existing options
+
+        if (selectedCategory in subcategories) {
+            subcategories[selectedCategory].forEach(function(subcat){
+                var option = document.createElement("option");
+                option.value = subcat;
+                option.text = subcat;
+                subcategorySelect.appendChild(option);
+            });
+        }
+    }
+
+    // Call updateSubcategories on page load and category change
+    document.addEventListener("DOMContentLoaded", function(){
+        updateSubcategories();
+        document.getElementById("courseCategory").addEventListener("change", updateSubcategories);
+    });
+  </script>  
+    {% endblock %} 

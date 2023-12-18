@@ -1,0 +1,320 @@
+{% extends "learner_base.html" %}
+
+{% block stylesheets %}
+<style>
+    body {
+        font-family: Arial, sans-serif;
+    }
+
+    .container {
+        display: flex;
+        flex-direction: row;
+        padding: 10px;
+        max-width: 800px;
+        margin: auto;
+    }
+
+    .course-structure {
+        border: 1px solid #ccc;
+        padding: 10px;
+        border-radius: 5px;
+        width: 99%;
+        margin-right: 10px;
+    }
+
+    .edit-panel {
+        border: 1px solid #ccc;
+        padding: 10px;
+        margin: 5px;
+        border-radius: 5px;
+    }
+
+    .block-accordion {
+        background-color: #f9f9f9;
+        margin-bottom: 5px;
+        border-radius: 5px;
+        padding: 5px 10px;
+    }
+
+    .block-name,
+    .block-action-new {
+        display: block;
+        font-size: 10px;
+    }
+
+
+
+    .block-header>span {
+        flex-grow: 1;
+        font-weight: bold;
+    }
+
+    .block-header>button {
+        margin-left: 5px;
+        padding: 2px 5px;
+        cursor: pointer;
+        font-size: 8px;
+    }
+
+    .block-content {
+        display: block;
+        padding-left: 20px;
+    }
+
+    .child-block {
+        background-color: #e7e7e7;
+        margin-bottom: 5px;
+        padding: 5px 10px;
+        border-radius: 5px;
+    }
+
+    .add-block-btn {
+        background-color: #007bff;
+        color: white;
+        padding: 10px 15px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        text-align: center;
+        display: block;
+        width: 100%;
+        box-sizing: border-box;
+        /* Ensures padding doesn't affect overall width */
+        margin-top: 10px;
+    }
+
+    .accordion-button {
+        padding: 1px 4px;
+        /* Smaller padding */
+        font-size: 12px;
+        /* Smaller font size */
+        margin: 0 5px;
+        /* Adjust margin if necessary */
+        cursor: pointer;
+        background-color: #f0f0f0;
+        /* Optional: background color */
+        border: 1px solid #dcdcdc;
+        /* Optional: border */
+        border-radius: 4px;
+        /* Rounded corners */
+    }
+
+
+
+    .add-block-btn:hover {
+        background-color: #0056b3;
+    }
+
+
+    .container-box {
+        display: flex;
+    }
+
+    .box-left {
+        width: 30%;
+        /* Adjust the width as needed */
+        /* Add additional styling if needed */
+    }
+
+    .box-right {
+        width: 70%
+    }
+
+    .content-block {
+        cursor: pointer;
+        padding: 5px;
+        margin-bottom: 5px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+    }
+
+    .content-block:hover {
+        background-color: #f8f9fa;
+    }
+
+    form {
+        margin-top: 20px;
+    }
+
+    form div {
+        margin-bottom: 10px;
+    }
+
+    label {
+        display: block;
+        margin-bottom: 5px;
+    }
+
+    input[type="text"],
+    textarea,
+    select {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 10px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
+</style>
+{% endblock %}
+
+
+{% block content %}
+<div class="container-box">
+    <div class="box box-left">
+        <div class="course-structure">
+            {% macro render_block(block) %}
+            <div class="block-accordion">
+                <div class="block-header">
+                    <div>
+                        <button class="accordion-button"
+                            onclick="toggleAccordion('block-content-{{ block.id }}')">&#9660;</button>
+                        <span>{{ block.title }}</span>
+                    </div>
+                    <!-- <div class="block-action-new">
+                        <a href="#" onclick="addChildBlock({{ block.id }})" class="">+ Child Block | </a>
+                        <a href="#" onclick="addContent({{ block.id }})" class="">+ Content | </a>
+                        <a href="#" onclick="addAssessment({{ block.id }})" class="">+ Assessment |</a>
+                        <a href="#" onclick="deleteBlock({{ block.id }})" class="">- Delete</a>
+                    </div> -->
+                </div>
+                <div id="block-content-{{ block.id }}" class="block-content">
+                    {% for child in block.children %}
+                    <div class="child-block">
+                        {{ render_block(child) }}
+                    </div>
+                    {% endfor %}
+                    {% for content in block.contents %}
+                    <div class="content-block" id="content-block" onclick="showContent({{ content.id }})">
+                        {{ content.title }}
+                        <!-- Add more content details here if necessary -->
+                    </div>
+                    {% endfor %}
+
+                </div>
+            </div>
+            {% endmacro %}
+
+            {% for block in course.blocks %}
+            {% if block.parent_block_id is none %}
+            {{ render_block(block) }}
+            {% endif %}
+            {% endfor %}
+        </div>
+
+    </div>
+    <div class="box box-right">
+        <div class="edit-panel">
+            <!-- This is where the form to create/edit blocks and content will appear -->
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block script %}
+<script>
+    function toggleAccordion(contentId) {
+        var content = document.getElementById(contentId);
+        content.style.display = content.style.display === 'block' ? 'none' : 'block';
+    }
+
+    function showContent(contentId) {
+        fetch(`/course/learn_course/get_content/${contentId}`)
+            .then(response => response.json())
+            .then(data => {
+                let buttonHtml = data.completed
+                ? `<button type="button" id="MarkComplete" class="btn-success" disabled>Completed</button>`
+                : `<button type="button" id="MarkComplete" class="btn-primary" onclick="markComplete(${contentId})">MarkComplete</button>`;
+
+                var formHtml = `
+                <form id="show-content-form">
+                    <input type="hidden" name="content_id" value="${data.id}">
+                    <div>
+                        <h3>${data.title}</h3>
+                        <p>${data.text}</p>
+                     
+                    <div>${buttonHtml}</div>
+                </form>
+            `;
+                document.querySelector('.edit-panel').innerHTML = formHtml;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        fetch('/log_activity', {
+            method: 'POST',
+            body: JSON.stringify({
+                learner_id: "{{ session.get('current_learner_id') }}",
+                content_id: contentId,
+                activity: "initialized",
+                status: "inprogress",
+                percentage_complete: 0
+            }),
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+
+    }
+
+    function markComplete(contentId) {
+        fetch('/log_activity', {
+            method: 'POST',
+            body: JSON.stringify({
+                learner_id: "{{ session.get('current_learner_id') }}",
+                content_id: contentId,
+                activity: "marked_completed",
+                status: "completed",
+                percentage_complete: 100
+            }),
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        console.log("completed");
+        location.reload();
+    }
+
+    document.addEventListener('DOMContentLoaded', (event) => {
+        // Example function to call the Flask backend to log the activity
+        function logActivity(contentId, activity, status, percentageComplete) {
+            fetch('/log_activity', {
+                method: 'POST',
+                body: JSON.stringify({
+                    learner_id: "{{ session.get('current_learner_id') }}",
+                    content_id: contentId,
+                    activity: "marked_completed",
+                    status: "completed",
+                    percentage_complete: percentageComplete
+                }),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+        }
+
+
+
+        // Log 'terminated' activity when the .edit-panel innerHTML changes
+        const editPanel = document.querySelector('.edit-panel');
+        const observer = new MutationObserver((mutationsList, observer) => {
+            for (const mutation of mutationsList) {
+                if (mutation.type === 'childList') {
+                    logActivity(editPanel.dataset.contentId, 'terminated', 'inprogress', 0);
+                    // Optional: observer.disconnect(); if you want to stop observing after the change
+                }
+            }
+        });
+        observer.observe(editPanel, {
+            childList: true,
+            subtree: true
+        });
+        // Use a MutationObserver or another appropriate method to detect changes
+
+        // Log 'terminated' activity before the window is unloaded
+        window.addEventListener('beforeunload', () => {
+            logActivity(editPanel.dataset.contentId, 'terminated', 'inprogress', 0);
+        });
+    });
+</script>
+
+{% endblock %}

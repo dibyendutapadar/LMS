@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h2>Activity Log</h2>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Activty ID</th>
+                <th>Learner ID</th>
+                <th>Content ID</th>
+                <th>Activity</th>
+                <th>Status</th>
+                <th>Percentage_complete</th>
+                <th>Timestamp</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for activity in activities %}
+            <tr>
+                <td>{{ activity.id }}</td>
+                <td>{{ activity.learner_id }}</td>
+                <td>{{ activity.content_id }}</td>
+                <td>{{ activity.activity }}</td>
+                <td>{{ activity.status }}</td>
+                <td>{{ activity.percentage_complete }}</td>
+                <td>{{ activity.timestamp }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}
