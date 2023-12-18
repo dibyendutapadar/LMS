@@ -36,13 +36,13 @@
         padding: 5px 10px;
     }
 
-    .block-name, .block-action-new {
-    display: block;
-    font-size: 10px;
-}
-
-    .block-header {
+    .block-name,
+    .block-action-new {
+        display: block;
+        font-size: 10px;
     }
+
+    .block-header {}
 
     .block-header>span {
         flex-grow: 1;
@@ -107,64 +107,77 @@
 
 
     .container-box {
-    display: flex;
-}
+        display: flex;
+    }
 
-.box {
-    width: 50%; /* Adjust the width as needed */
-    /* Add additional styling if needed */
-}
+    .box {
+        width: 50%;
+        /* Adjust the width as needed */
+        /* Add additional styling if needed */
+    }
 
+    .content-block {
+        cursor: pointer;
+        padding: 5px;
+        margin-bottom: 5px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+    }
+
+    .content-block:hover {
+        background-color: #f8f9fa;
+    }
 </style>
 {% endblock %}
 <!-- Add your meta tags, title, and CSS links -->
 
 
 {% block content %}
-    <div class="container-box">
-        <div class="box">
-            <div class="course-structure">
-                {% macro render_block(block) %}
-                <div class="block-accordion">
-                    <div class="block-header">
-                        <div>
-                            <button class="accordion-button"
-                                onclick="toggleAccordion('block-content-{{ block.id }}')">&#9660;</button>
-                            <span>{{ block.title }}</span>
-                        </div>
-                        <div class = "block-action-new">
-                            <a href="#" onclick="addChildBlock({{ block.id }})" class="">+ Child Block</a>
-                            <a href="#" onclick="addContent({{ block.id }})" class="">+ Content</a>
-                        </div>
+<div class="container-box">
+    <div class="box">
+        <div class="course-structure">
+            {% macro render_block(block) %}
+            <div class="block-accordion">
+                <div class="block-header">
+                    <div>
+                        <button class="accordion-button"
+                            onclick="toggleAccordion('block-content-{{ block.id }}')">&#9660;</button>
+                        <span>{{ block.title }}</span>
                     </div>
-                    <div id="block-content-{{ block.id }}" class="block-content">
-                        {% for child in block.children %}
-                        <div class="child-block">
-                            {{ render_block(child) }}
-                        </div>
-                        {% endfor %}
-                        {% for content in block.contents %}
-                        <div class="content-block">
-                            {{ content.title }}
-                            <!-- Add more content details here if necessary -->
-                        </div>
-                        {% endfor %}
+                    <div class="block-action-new">
+                        <a href="#" onclick="addChildBlock({{ block.id }})" class="">+ Child Block</a>
+                        <a href="#" onclick="addContent({{ block.id }})" class="">+ Content</a>
                     </div>
                 </div>
-                {% endmacro %}
+                <div id="block-content-{{ block.id }}" class="block-content">
+                    {% for child in block.children %}
+                    <div class="child-block">
+                        {{ render_block(child) }}
+                    </div>
+                    {% endfor %}
+                    {% for content in block.contents %}
+                    <div class="content-block" onclick="showEditContentForm({{ content.id }})">
+                        {{ content.title }}
+                        <!-- Add more content details here if necessary -->
+                    </div>
+                    {% endfor %}
 
-                {% for block in course.blocks %}
-                {{ render_block(block) }}
-                {% endfor %}
+                </div>
             </div>
-            <button class="add-block-btn" onclick="addBlock()">Add Block</button>
+            {% endmacro %}
+
+            {% for block in course.blocks %}
+            {{ render_block(block) }}
+            {% endfor %}
         </div>
-        <div class="box">
-            <div class="edit-panel">
-                <!-- This is where the form to create/edit blocks and content will appear -->
-            </div>
+        <button class="add-block-btn" onclick="addBlock()">Add Block</button>
+    </div>
+    <div class="box">
+        <div class="edit-panel">
+            <!-- This is where the form to create/edit blocks and content will appear -->
         </div>
     </div>
+</div>
 {% endblock %}
 
 {% block script %}
@@ -312,6 +325,50 @@
             .catch(error => {
                 console.error('Error:', error);
                 alert('An error occurred while submitting the form.');
+            });
+    }
+
+    function showEditContentForm(contentId) {
+        fetch(`/course/edit_course/get_content/${contentId}`)
+            .then(response => response.json())
+            .then(data => {
+                var formHtml = `
+                <form id="edit-content-form">
+                    <input type="hidden" name="content_id" value="${contentId}">
+                    <div>
+                        <label for="content_title">Content Title:</label>
+                        <input type="text" id="content_title" name="content_title" required value="${data.content_title}">
+                    </div>
+                    <div>
+                        <label for="content_text">Content Text:</label>
+                        <textarea id="content_text" name="content_text" required>${data.content_text}</textarea>
+                    </div>
+                    <div>
+                        <button type="button" onclick="submitEditContentForm()">Update</button>
+                    </div>
+                </form>
+            `;
+                document.querySelector('.edit-panel').innerHTML = formHtml;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+    }
+
+    function submitEditContentForm() {
+        var formElement = document.getElementById('edit-content-form');
+        var formData = new FormData(formElement);
+
+        fetch('/course/edit_course/update_content/', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Handle the response after update
+            })
+            .catch(error => {
+                console.error('Error:', error);
             });
     }
 </script>

@@ -2,7 +2,8 @@
 
 {% block content %}
     <h1>Courses</h1>
-    <table>
+    <a href="{{ url_for('create_new_course') }}" class="btn btn-success mb-3">Create New Course</a>
+    <table class="table">
         <thead>
             <tr>
                 <th>Course ID</th>

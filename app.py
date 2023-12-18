@@ -255,7 +255,7 @@ def get_block(blockId):
 
 
 
-@app.route('/course/edit_course/get_content/',methods=['GET'])
+@app.route('/course/edit_course/get_content/<int:contentId>', methods=['GET'])
 def get_content(contentId):
     content = Content.query.get(contentId)
     if content:
@@ -268,6 +268,21 @@ def get_content(contentId):
         }), 200
     else:
         return jsonify({'error': 'Content not found'}), 404
+
+@app.route('/course/edit_course/update_content/', methods=['POST'])
+def update_content():
+    content_id = request.form.get('content_id')
+    title = request.form.get('content_title')
+    text = request.form.get('content_text')
+
+    content = Content.query.get(content_id)
+    if content:
+        content.title = title
+        content.text = text
+        db.session.commit()
+        return jsonify({'message': 'Content updated successfully'}), 200
+    else:
+        return jsonify({'message': 'Content not found'}), 404
 
 
 @app.route('/course/edit_course/add_child_block', methods=['POST'])
@@ -290,6 +305,31 @@ def add_child_block():
 
     # Respond with JSON indicating success and the ID of the new child block
     return {'success': True, 'child_block_id': child_block.id}
+
+@app.route('/course/view_contents')
+def view_content():
+    contents = Content.query.all()
+    return render_template('view_content.html', contents=contents)
+
+
+@app.route('/course/content', methods=['GET', 'POST'])
+def add_new_content():
+    if request.method == 'POST':
+        title = request.form['contentTitle']
+        description = request.form['contentDescription']
+        category = request.form['courseCategory']
+        sub_category = request.form['courseSubCategory']
+
+        new_course = Course(title=title, description=description, category=category, sub_category=sub_category)
+        db.session.add(new_course)
+        db.session.commit()
+        print(f"Course '{title}' added successfully.")
+        new_course_id = new_course.id
+        
+        return redirect(url_for('edit_course', course_id=new_course_id))
+
+    return render_template('create_new_course.html')  # This should render the template to create a new course
+
 
 # @app.errorhandler(404)
 # def page_not_found(e):

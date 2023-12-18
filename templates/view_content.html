@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h1>Contents</h1>
+    <a href="{{ url_for('add_content') }}" class="btn btn-success mb-3">Create New Course</a>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Content ID</th>
+                <th>Title</th>
+                <th>Description</th>
+                <th>Edit</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for content in contents %}
+                <tr>
+                    <td>{{ content.id }}</td>
+                    <td>{{ content.title }}</td>
+                    <td>{{ content.description }}</td>
+                    <td><a href="{{ url_for('get_content', contentId=content.id) }}">Edit</a></td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endblock %}
