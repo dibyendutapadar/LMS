@@ -222,27 +222,24 @@ def add_block():
     # Respond with JSON indicating success
     return {'success': True}
 
-@app.route('/course/edit_course/add_content',methods=['POST'])
-def add_content():
-    data = request.json
-    block_id = data['blockId']
-    title = data['title']
-    text = data['text']
+from flask import request, jsonify
 
+@app.route('/course/edit_course/add_content', methods=['POST'])
+def add_content():
+    block_id = request.form.get('block_id')
+    content_title = request.form.get('content_title')
+    content_text = request.form.get('content_text')
+
+    # Input validation, error handling, and database interaction would go here
     try:
-        new_content = Content(title=title, text=text, block_id=block_id)
+        # Assuming you have a function to create content
+        new_content = Content(title=content_title, text=content_text, block_id=block_id)
         db.session.add(new_content)
         db.session.commit()
-        return jsonify({
-            'id': new_content.id,
-            'title': new_content.title,
-            'text': new_content.text,
-            'block_id': new_content.block_id,
-            'message': 'Content added successfully'
-        }), 201
+        return jsonify({'success': True, 'content_id': new_content.id})
     except Exception as e:
-        db.session.rollback()
-        return jsonify({'error': 'Failed to add content', 'message': str(e)}), 500
+        # Log the exception e and return an error message
+        return jsonify({'success': False, 'error': 'Failed to add content'}), 500
 
 @app.route('/course/edit_course/get_block', methods=['GET'])
 def get_block(blockId):

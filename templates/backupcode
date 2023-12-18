@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Course</title>
+    <!-- Bootstrap CSS for styling and layout -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        .sidebar {
+            background-color: #f8f9fa;
+            border-right: 1px solid #ddd;
+            height: 100vh;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .content-area {
+            background-color: #fff;
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+        .block,
+        .content {
+            cursor: pointer;
+            margin-bottom: 5px;
+        }
+
+        .block:hover,
+        .content:hover {
+            background-color: #e9ecef;
+        }
+
+        .block-title,
+        .content-title {
+            font-weight: bold;
+        }
+
+        .nested-block {
+            margin-left: 20px;
+            border-left: 2px solid #007bff;
+        }
+
+        .action-links {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .action-links a {
+            margin-right: 10px;
+            font-size: 0.8em;
+        }
+
+        .save-button {
+            position: fixed;
+            right: 20px;
+            top: 20px;
+        }
+
+        .edit-form {
+            display: none;
+            padding: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    {% macro render_blocks(blocks) %}
+    <div class="accordion" id="courseAccordion">
+        {% for block in blocks %}
+        <div class="card">
+            <div class="card-header" id="heading{{ block.id }}">
+                <h2 class="mb-0">
+                    <button class="btn btn-link btn-block text-left" type="button" data-toggle="collapse"
+                        data-target="#collapse{{ block.id }}" aria-expanded="true"
+                        aria-controls="collapse{{ block.id }}">
+                        {{ block.title }}
+                    </button>
+                </h2>
+                <div class="action-links">
+                    <a href="#" onclick="showAddBlockForm({{ block.id }})">Add Block</a>
+                    <a href="#" onclick="showAddContentForm({{ block.id }})">Add Content</a>
+                </div>
+            </div>
+
+            <div id="collapse{{ block.id }}" class="collapse" aria-labelledby="heading{{ block.id }}"
+                data-parent="#courseAccordion">
+                <div class="card-body">
+                    <div class="nested-block">
+                        <!-- Render nested blocks -->
+                        {{ render_blocks(block.children) }}
+                        {% for content in block.contents %}
+                        <div class="content" onclick="showEditContentForm({{ content.id }})">
+                            {{ content.title }}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endmacro %}
+
+
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-4 sidebar">
+                <!-- Course structure accordion -->
+                <h2 class="my-3">{{ course.title }}</h2>
+                <div id="blocks-container">
+                    <!-- Render the blocks here -->
+                    {{ render_blocks(course.blocks) }}
+                </div>
+            </div>
+            <div class="col-md-8 content-area">
+                <!-- Save button -->
+                <button class="btn btn-primary save-button">Save</button>
+
+                <!-- Edit block form -->
+                <div id="edit-block-form" class="edit-form">
+                    <h3>Edit Block</h3>
+                    <input type="text" id="block-title" placeholder="Block Title" class="form-control mb-2">
+                    <button class="btn btn-primary" onclick="saveBlock()">Save Block</button>
+                </div>
+
+                <!-- Edit content form -->
+                <div id="edit-content-form" class="edit-form">
+                    <h3>Edit Content</h3>
+                    <input type="text" id="content-title" placeholder="Content Title" class="form-control mb-2">
+                    <textarea id="content-text" placeholder="Content Text" class="form-control mb-2"></textarea>
+                    <button class="btn btn-primary" onclick="saveContent()">Save Content</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Jinja2 macro for rendering blocks -->
+
+
+    <!-- JavaScript functions -->
+    <script>
+        function showAddBlockForm(parentBlockId) {
+            // Assuming you have an input field and a submit button for the new block form
+            var blockFormHTML = `
+        <h3>Add New Block</h3>
+        <input type="text" id="new-block-title" placeholder="Block Title" class="form-control mb-2">
+        <button class="btn btn-primary" onclick="submitNewBlock(${parentBlockId})">Add Block</button>
+    `;
+
+            // Now insert the form HTML into the edit-block-form div and show it
+            var editBlockForm = document.getElementById('edit-block-form');
+            editBlockForm.innerHTML = blockFormHTML;
+            editBlockForm.style.display = 'block';
+
+            // If there's an edit content form, hide it
+            var editContentForm = document.getElementById('edit-content-form');
+            if (editContentForm) {
+                editContentForm.style.display = 'none';
+            }
+        }
+
+        function submitNewBlock(courseId=course_id,parentBlockId= null) {
+            var title = document.getElementById('new-block-title').value;
+            console.log(courseId);
+            // Validate input
+            if (!title.trim()) {
+                alert('Please enter a block title.');
+                return;
+            }
+
+            // Prepare data to be sent to the server
+            var data = {
+                title: title,
+                parentBlockId: parentBlockId,
+                courseId: courseId
+            };
+
+            // Send a POST request to the server
+            fetch('/course/edit_course/add_block', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Block added:', data);
+                    // Here you would update the UI with the new block
+                    // Reset the form
+                    document.getElementById('new-block-title').value = '';
+                    // Optionally, hide the form
+                    document.getElementById('edit-block-form').style.display = 'none';
+                    // ... Update the UI to reflect the new block ...
+                })
+                .catch((error) => {
+                    console.error('Error:', error);
+                });
+        }
+
+        function showAddContentForm(blockId) {
+            // Assuming you have an input field for the content title, a textarea for the content text, and a submit button for the content form
+            var contentFormHTML = `
+        <h3>Add New Content</h3>
+        <input type="text" id="new-content-title" placeholder="Content Title" class="form-control mb-2">
+        <textarea id="new-content-text" placeholder="Content Text" class="form-control mb-2"></textarea>
+        <button class="btn btn-primary" onclick="submitNewContent(${blockId})">Add Content</button>
+    `;
+
+            // Now insert the form HTML into the edit-content-form div and show it
+            var editContentForm = document.getElementById('edit-content-form');
+            editContentForm.innerHTML = contentFormHTML;
+            editContentForm.style.display = 'block';
+
+            // If there's an edit block form, hide it
+            var editBlockForm = document.getElementById('edit-block-form');
+            if (editBlockForm) {
+                editBlockForm.style.display = 'none';
+            }
+        }
+
+        function submitNewContent(blockId) {
+            var title = document.getElementById('new-content-title').value;
+            var text = document.getElementById('new-content-text').value;
+
+            // Validate input
+            if (!title.trim()) {
+                alert('Please enter a content title.');
+                return;
+            }
+            if (!text.trim()) {
+                alert('Please enter content text.');
+                return;
+            }
+
+            // Prepare data to be sent to the server
+            var data = {
+                title: title,
+                text: text,
+                blockId: blockId
+            };
+
+            // Send a POST request to the server
+            fetch('/course/edit_course/add_content', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Content added:', data);
+                    // Here you would update the UI with the new content
+                    // Reset the form
+                    document.getElementById('new-content-title').value = '';
+                    document.getElementById('new-content-text').value = '';
+                    // Optionally, hide the form
+                    document.getElementById('edit-content-form').style.display = 'none';
+                    // ... Update the UI to reflect the new content ...
+                })
+                .catch((error) => {
+                    console.error('Error:', error);
+                });
+        }
+
+
+        function showEditBlockForm(blockId) {
+            // Retrieve block information based on blockId
+            // This part can be an AJAX GET request to fetch block data
+            fetch(`/course/edit_course/get_block/${blockId}`)
+                .then(response => response.json())
+                .then(blockData => {
+                    // Populate the form with the block's current data
+                    document.getElementById('block-title').value = blockData.title;
+
+                    // Show the block edit form and hide the content edit form
+                    var editBlockForm = document.getElementById('edit-block-form');
+                    editBlockForm.style.display = 'block';
+                    editBlockForm.dataset.blockId = blockId; // Store the blockId for reference when saving
+
+                    var editContentForm = document.getElementById('edit-content-form');
+                    editContentForm.style.display = 'none';
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        }
+
+        function showEditContentForm(contentId) {
+            // Retrieve content information based on contentId
+            // This part can be an AJAX GET request to fetch content data
+            fetch(`/course/edit_course/get_content/${contentId}`)
+                .then(response => response.json())
+                .then(contentData => {
+                    // Populate the form with the content's current data
+                    document.getElementById('content-title').value = contentData.title;
+                    document.getElementById('content-text').value = contentData.text;
+
+                    // Show the content edit form and hide the block edit form
+                    var editContentForm = document.getElementById('edit-content-form');
+                    editContentForm.style.display = 'block';
+                    editContentForm.dataset.contentId = contentId; // Store the contentId for reference when saving
+
+                    var editBlockForm = document.getElementById('edit-block-form');
+                    editBlockForm.style.display = 'none';
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        }
+
+
+        function saveBlock() {
+            // Logic to save block
+        }
+
+        function saveContent() {
+            // Logic to save content
+        }
+    </script>
+    <!-- Bootstrap JS and its dependencies -->
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+</body>
+
+</html>

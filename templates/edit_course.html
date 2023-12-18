@@ -1,73 +1,186 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends "base.html" %}
+{% block title %}Edit Course{% endblock %}
+{% block stylesheets %}
+<style>
+    body {
+        font-family: Arial, sans-serif;
+    }
 
-<head>
-    <style>
-        .child-block {
-            margin-left: 20px;
-        }
+    .container {
+        display: flex;
+        flex-direction: row;
+        padding: 10px;
+        max-width: 800px;
+        margin: auto;
+    }
 
-        .content-block {
-            margin-left: 40px;
-        }
+    .course-structure {
+        border: 1px solid #ccc;
+        padding: 10px;
+        border-radius: 5px;
+        width: 70%;
+        margin-right: 10px;
+    }
 
-        .accordion-button {
-            /* Styling for your accordion buttons */
-        }
-    </style>
-    <!-- Add your meta tags, title, and CSS links -->
-</head>
+    .edit-panel {
+        border: 1px solid #ccc;
+        padding: 10px;
+        margin: 5px;
+        border-radius: 5px;
+    }
 
-<body>
-    <div class="container">
-        <div class="course-structure">
-            {% macro render_block(block) %}
-            <div class="block-accordion">
-                <div class="block-header">
-                    <button class="accordion-button" onclick="toggleAccordion({{ block.id }})">
-                        {{ block.title }}
-                    </button>
-                    <button onclick="addChildBlock({{ block.id }})">+ Child Block</button>
-                    <button onclick="addContent({{ block.id }})">+ Content</button>
-                </div>
-                <div id="accordion{{ block.id }}" class="block-content">
-                    {% for child in block.children %}
-                    <div class="child-block">
-                        {{ render_block(child) }}
+    .block-accordion {
+        background-color: #f9f9f9;
+        margin-bottom: 5px;
+        border-radius: 5px;
+        padding: 5px 10px;
+    }
+
+    .block-name, .block-action-new {
+    display: block;
+    font-size: 10px;
+}
+
+    .block-header {
+    }
+
+    .block-header>span {
+        flex-grow: 1;
+        font-weight: bold;
+    }
+
+    .block-header>button {
+        margin-left: 5px;
+        padding: 2px 5px;
+        cursor: pointer;
+        font-size: 8px;
+    }
+
+    .block-content {
+        display: none;
+        padding-left: 20px;
+    }
+
+    .child-block {
+        background-color: #e7e7e7;
+        margin-bottom: 5px;
+        padding: 5px 10px;
+        border-radius: 5px;
+    }
+
+    .add-block-btn {
+        background-color: #007bff;
+        color: white;
+        padding: 10px 15px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        text-align: center;
+        display: block;
+        width: 100%;
+        box-sizing: border-box;
+        /* Ensures padding doesn't affect overall width */
+        margin-top: 10px;
+    }
+
+    .accordion-button {
+        padding: 1px 4px;
+        /* Smaller padding */
+        font-size: 12px;
+        /* Smaller font size */
+        margin: 0 5px;
+        /* Adjust margin if necessary */
+        cursor: pointer;
+        background-color: #f0f0f0;
+        /* Optional: background color */
+        border: 1px solid #dcdcdc;
+        /* Optional: border */
+        border-radius: 4px;
+        /* Rounded corners */
+    }
+
+
+
+    .add-block-btn:hover {
+        background-color: #0056b3;
+    }
+
+
+    .container-box {
+    display: flex;
+}
+
+.box {
+    width: 50%; /* Adjust the width as needed */
+    /* Add additional styling if needed */
+}
+
+</style>
+{% endblock %}
+<!-- Add your meta tags, title, and CSS links -->
+
+
+{% block content %}
+    <div class="container-box">
+        <div class="box">
+            <div class="course-structure">
+                {% macro render_block(block) %}
+                <div class="block-accordion">
+                    <div class="block-header">
+                        <div>
+                            <button class="accordion-button"
+                                onclick="toggleAccordion('block-content-{{ block.id }}')">&#9660;</button>
+                            <span>{{ block.title }}</span>
+                        </div>
+                        <div class = "block-action-new">
+                            <a href="#" onclick="addChildBlock({{ block.id }})" class="">+ Child Block</a>
+                            <a href="#" onclick="addContent({{ block.id }})" class="">+ Content</a>
+                        </div>
                     </div>
-                    {% endfor %}
-                    {% for content in block.contents %}
-                    <div class="content-block">
-                        {{ content.title }}
-                        <!-- Add more content details here if necessary -->
+                    <div id="block-content-{{ block.id }}" class="block-content">
+                        {% for child in block.children %}
+                        <div class="child-block">
+                            {{ render_block(child) }}
+                        </div>
+                        {% endfor %}
+                        {% for content in block.contents %}
+                        <div class="content-block">
+                            {{ content.title }}
+                            <!-- Add more content details here if necessary -->
+                        </div>
+                        {% endfor %}
                     </div>
-                    {% endfor %}
                 </div>
+                {% endmacro %}
+
+                {% for block in course.blocks %}
+                {{ render_block(block) }}
+                {% endfor %}
             </div>
-            {% endmacro %}
-            <!-- Iterate through blocks to create accordions -->
-            {% for block in course.blocks %}
-            <!-- Render top-level blocks; the macro will handle nesting -->
-            {{ render_block(block) }}
-            {% endfor %}
-            <button onclick="addBlock()">Add Block</button>
+            <button class="add-block-btn" onclick="addBlock()">Add Block</button>
         </div>
-        <div class="edit-panel">
-            <!-- This is where the form to create/edit blocks and content will appear -->
+        <div class="box">
+            <div class="edit-panel">
+                <!-- This is where the form to create/edit blocks and content will appear -->
+            </div>
         </div>
     </div>
-    <script>
-        // JavaScript functions to handle adding blocks, adding child blocks, and adding content
-        
-        function toggleAccordion(blockId) {
-            var accordion = document.getElementById('accordion' + blockId);
-            accordion.style.display = accordion.style.display === 'none' ? 'block' : 'none';
-        }
-        
-        
-        function addBlock() {
-            // Create the form HTML
-            var formHtml = `
+{% endblock %}
+
+{% block script %}
+
+<script>
+    // JavaScript functions to handle adding blocks, adding child blocks, and adding content
+
+    function toggleAccordion(contentId) {
+        var content = document.getElementById(contentId);
+        content.style.display = content.style.display === 'block' ? 'none' : 'block';
+    }
+
+
+    function addBlock() {
+        // Create the form HTML
+        var formHtml = `
       <form id="add-block-form" action="/add_block" method="post">
         <input type="hidden" name="course_id" value="{{ course.id }}" />
         <div>
@@ -81,60 +194,15 @@
       </form>
     `;
 
-            // Insert the form into the right panel
-            document.querySelector('.edit-panel').innerHTML = formHtml;
+        // Insert the form into the right panel
+        document.querySelector('.edit-panel').innerHTML = formHtml;
 
-            // Add an event listener for form submission
-            document.getElementById('add-block-form').addEventListener('submit', function (event) {
-                event.preventDefault(); // Prevent the default form submission
+        // Add an event listener for form submission
+        document.getElementById('add-block-form').addEventListener('submit', function (event) {
+            event.preventDefault(); // Prevent the default form submission
 
-                var formData = new FormData(this);
-                fetch('/course/edit_course/add_block', {
-                        method: 'POST',
-                        body: formData
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        // Handle response data
-                        console.log(data);
-                        if (data.success) {
-                            // Here, you could dynamically add the new block to the left panel
-                            // without reloading the page, or simply reload the page to show the new block
-                            location
-                                .reload(); // This line reloads the page, you might want to replace this with dynamic DOM manipulation
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                    });
-            });
-        }
-
-        function addChildBlock(parentBlockId) {
-            // Create the form HTML for adding a child block
-            var formHtml = `
-      <form id="add-child-block-form">
-        <input type="hidden" name="parent_block_id" value="${parentBlockId}">
-        <div>
-          <label for="child_block_title">Child Block Title:</label>
-          <input type="text" id="child_block_title" name="block_title" required>
-        </div>
-        <!-- Add any additional fields you need here -->
-        <div>
-          <button type="button" onclick="submitChildBlockForm()">Add Child Block</button>
-        </div>
-      </form>
-    `;
-
-            // Insert the form into the edit panel
-            document.querySelector('.edit-panel').innerHTML = formHtml;
-        }
-
-        function submitChildBlockForm() {
-            var formElement = document.getElementById('add-child-block-form');
-            var formData = new FormData(formElement);
-
-            fetch('/course/edit_course/add_child_block', {
+            var formData = new FormData(this);
+            fetch('/course/edit_course/add_block', {
                     method: 'POST',
                     body: formData
                 })
@@ -143,19 +211,108 @@
                     // Handle response data
                     console.log(data);
                     if (data.success) {
-                        // Update the UI to show the new child block
-                        location.reload(); // Or dynamically update the DOM
+                        // Here, you could dynamically add the new block to the left panel
+                        // without reloading the page, or simply reload the page to show the new block
+                        location
+                            .reload(); // This line reloads the page, you might want to replace this with dynamic DOM manipulation
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
                 });
-        }
+        });
+    }
 
-        function addContent(blockId) {
-            // Logic to add content to a block
-        }
-    </script>
-</body>
+    function addChildBlock(parentBlockId) {
+        // Create the form HTML for adding a child block
+        var formHtml = `
+      <form id="add-child-block-form">
+        <input type="hidden" name="parent_block_id" value="${parentBlockId}">
+        <div>
+          <label for="child_block_title">Child Block Title:</label>
+          <input type="text" id="child_block_title" name="block_title" required>
+        </div>
+        <!-- Add any additional fields you need here -->
+        <div>
+          <button type="button btn-add-child-block" onclick="submitChildBlockForm()">Add Child Block</button>
+        </div>
+      </form>
+    `;
 
-</html>
+        // Insert the form into the edit panel
+        document.querySelector('.edit-panel').innerHTML = formHtml;
+    }
+
+    function submitChildBlockForm() {
+        var formElement = document.getElementById('add-child-block-form');
+        var formData = new FormData(formElement);
+
+        fetch('/course/edit_course/add_child_block', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Handle response data
+                console.log(data);
+                if (data.success) {
+                    // Update the UI to show the new child block
+                    location.reload(); // Or dynamically update the DOM
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+    }
+
+    function addContent(blockId) {
+        // Create the form HTML
+        var formHtml = `
+      <form id="add-content-form">
+        <input type="hidden" name="block_id" value="${blockId}">
+        <div>
+          <label for="content_title">Content Title:</label>
+          <input type="text" id="content_title" name="content_title" required>
+        </div>
+        <div>
+          <label for="content_text">Content Text:</label>
+          <textarea id="content_text" name="content_text" required></textarea>
+        </div>
+        <div>
+          <button type="button" onclick="submitContentForm()">Add Content</button>
+        </div>
+      </form>
+    `;
+
+        // Insert the form into the edit panel
+        document.querySelector('.edit-panel').innerHTML = formHtml;
+    }
+
+    function submitContentForm() {
+        var formElement = document.getElementById('add-content-form');
+        var formData = new FormData(formElement);
+
+        fetch('/course/edit_course/add_content', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Handle response data
+                if (data.success) {
+                    // Update the UI to show the new content
+                    // You might want to add the new content to the block's content list
+                    // For now, we'll just reload to see the changes
+                    location.reload();
+                } else {
+                    // Handle errors, display messages to the user
+                    alert(data.error || 'An error occurred while adding content.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while submitting the form.');
+            });
+    }
+</script>
+{% endblock %}
