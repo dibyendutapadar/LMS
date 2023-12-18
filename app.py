@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, jsonify
 import sqlite3
 import math
 from flask import request
@@ -8,6 +8,8 @@ from sqlalchemy import create_engine, Column, Integer, String, Text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 import sqlalchemy.orm
+from sqlalchemy.orm import backref
+from sqlalchemy.orm import relationship
 
 
 app = Flask(__name__)
@@ -142,7 +144,10 @@ class Block(db.Model):
     title = db.Column(db.String(100), nullable=False)
     course_id = db.Column(db.Integer, db.ForeignKey('course.id'), nullable=False)
     parent_block_id = db.Column(db.Integer, db.ForeignKey('block.id'), nullable=True)
-    children = db.relationship('Block')
+    
+    # Set up a self-referential relationship
+    # 'remote_side' is used to indicate this column is on the remote side of the relationship
+    parent_block = db.relationship('Block', remote_side=[id],backref=backref('children', cascade='all, delete-orphan'))
     contents = db.relationship('Content', backref='block', lazy=True)
 
 class Content(db.Model):
@@ -201,13 +206,93 @@ def edit_course(course_id):
 
 @app.route('/course/view_courses')
 def view_courses():
-    conn = sqlite3.connect('LMS.db')
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM course")
-    courses = cursor.fetchall()
-    conn.close()
+    courses = Course.query.all()
     return render_template('view_courses.html', courses=courses)
 
+@app.route('/course/edit_course/add_block', methods=['POST'])
+def add_block():
+    course_id = request.form.get('course_id')
+    block_title = request.form.get('block_title')
+    
+    # Assuming you have already set up your database session as `db`
+    new_block = Block(title=block_title, course_id=course_id)
+    db.session.add(new_block)
+    db.session.commit()
+
+    # Respond with JSON indicating success
+    return {'success': True}
+
+@app.route('/course/edit_course/add_content',methods=['POST'])
+def add_content():
+    data = request.json
+    block_id = data['blockId']
+    title = data['title']
+    text = data['text']
+
+    try:
+        new_content = Content(title=title, text=text, block_id=block_id)
+        db.session.add(new_content)
+        db.session.commit()
+        return jsonify({
+            'id': new_content.id,
+            'title': new_content.title,
+            'text': new_content.text,
+            'block_id': new_content.block_id,
+            'message': 'Content added successfully'
+        }), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': 'Failed to add content', 'message': str(e)}), 500
+
+@app.route('/course/edit_course/get_block', methods=['GET'])
+def get_block(blockId):
+    block = Block.query.get(blockId)
+    if block:
+        return jsonify({
+            'id': block.id,
+            'title': block.title,
+            # Include any other block details you need
+        }), 200
+    else:
+        return jsonify({'error': 'Block not found'}), 404
+
+
+
+@app.route('/course/edit_course/get_content/',methods=['GET'])
+def get_content(contentId):
+    content = Content.query.get(contentId)
+    if content:
+        return jsonify({
+            'id': content.id,
+            'title': content.title,
+            'text': content.text,
+            'block_id': content.block_id
+            # Include any other content details you need
+        }), 200
+    else:
+        return jsonify({'error': 'Content not found'}), 404
+
+
+@app.route('/course/edit_course/add_child_block', methods=['POST'])
+def add_child_block():
+    parent_block_id = request.form.get('parent_block_id')
+    block_title = request.form.get('block_title')
+
+    # Find the parent block
+    parent_block = Block.query.get(parent_block_id)
+    print(parent_block)
+    # Create a new child block
+    child_block = Block(title=block_title, course_id=parent_block.course_id, parent_block_id=parent_block_id)
+    
+    # Append the new child block to the parent block's children relationship
+    parent_block.children.append(child_block)
+    
+    # Commit the changes to the database
+    db.session.add(child_block)
+    db.session.commit()
+
+    # Respond with JSON indicating success and the ID of the new child block
+    return {'success': True, 'child_block_id': child_block.id}
 
 # @app.errorhandler(404)
 # def page_not_found(e):
