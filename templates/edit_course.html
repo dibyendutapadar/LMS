@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Course</title>
+    <!-- Bootstrap CSS for styling and layout -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        .sidebar {
+            background-color: #f8f9fa;
+            border-right: 1px solid #ddd;
+            height: 100vh;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .content-area {
+            background-color: #fff;
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+        .block,
+        .content {
+            cursor: pointer;
+            margin-bottom: 5px;
+        }
+
+        .block:hover,
+        .content:hover {
+            background-color: #e9ecef;
+        }
+
+        .block-title,
+        .content-title {
+            font-weight: bold;
+        }
+
+        .nested-block {
+            margin-left: 20px;
+            border-left: 2px solid #007bff;
+        }
+
+        .action-links {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .action-links a {
+            margin-right: 10px;
+            font-size: 0.8em;
+        }
+
+        .save-button {
+            position: fixed;
+            right: 20px;
+            top: 20px;
+        }
+
+        .edit-form {
+            display: none;
+            padding: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    {% macro render_blocks(blocks) %}
+    <div class="accordion" id="courseAccordion">
+        {% for block in blocks %}
+        <div class="card">
+            <div class="card-header" id="heading{{ block.id }}">
+                <h2 class="mb-0">
+                    <button class="btn btn-link btn-block text-left" type="button" data-toggle="collapse"
+                        data-target="#collapse{{ block.id }}" aria-expanded="true"
+                        aria-controls="collapse{{ block.id }}">
+                        {{ block.title }}
+                    </button>
+                </h2>
+                <div class="action-links">
+                    <a href="#" onclick="showAddBlockForm({{ block.id }})">Add Block</a>
+                    <a href="#" onclick="showAddContentForm({{ block.id }})">Add Content</a>
+                </div>
+            </div>
+
+            <div id="collapse{{ block.id }}" class="collapse" aria-labelledby="heading{{ block.id }}"
+                data-parent="#courseAccordion">
+                <div class="card-body">
+                    <div class="nested-block">
+                        <!-- Render nested blocks -->
+                        {{ render_blocks(block.children) }}
+                        {% for content in block.contents %}
+                        <div class="content" onclick="showEditContentForm({{ content.id }})">
+                            {{ content.title }}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endmacro %}
+
+
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-4 sidebar">
+                <!-- Course structure accordion -->
+                <h2 class="my-3">{{ course.title }}</h2>
+                <div id="blocks-container">
+                    <!-- Render the blocks here -->
+                    {{ render_blocks(course.blocks) }}
+                </div>
+            </div>
+            <div class="col-md-8 content-area">
+                <!-- Save button -->
+                <button class="btn btn-primary save-button">Save</button>
+
+                <!-- Edit block form -->
+                <div id="edit-block-form" class="edit-form">
+                    <h3>Edit Block</h3>
+                    <input type="text" id="block-title" placeholder="Block Title" class="form-control mb-2">
+                    <button class="btn btn-primary" onclick="saveBlock()">Save Block</button>
+                </div>
+
+                <!-- Edit content form -->
+                <div id="edit-content-form" class="edit-form">
+                    <h3>Edit Content</h3>
+                    <input type="text" id="content-title" placeholder="Content Title" class="form-control mb-2">
+                    <textarea id="content-text" placeholder="Content Text" class="form-control mb-2"></textarea>
+                    <button class="btn btn-primary" onclick="saveContent()">Save Content</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Jinja2 macro for rendering blocks -->
+
+
+    <!-- JavaScript functions -->
+    <script>
+        function showAddBlockForm(parentBlockId) {
+            // Display form to add a block
+        }
+
+        function showAddContentForm(blockId) {
+            // Display form to add content
+        }
+
+        function showEditBlockForm(blockId) {
+            // Display form to edit block
+        }
+
+        function showEditContentForm(contentId) {
+            // Display form to edit content
+        }
+
+        function saveBlock() {
+            // Logic to save block
+        }
+
+        function saveContent() {
+            // Logic to save content
+        }
+    </script>
+    <!-- Bootstrap JS and its dependencies -->
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+</body>
+
+</html>

@@ -7,6 +7,7 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import create_engine, Column, Integer, String, Text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+import sqlalchemy.orm
 
 
 app = Flask(__name__)
@@ -122,7 +123,7 @@ def update_task(task_id):
     # ...
     return 0
 
-Base = declarative_base()
+Base = sqlalchemy.orm.declarative_base()
 engine = create_engine('sqlite:///LMS.db')
 Base.metadata.bind = engine
 DBSession = sessionmaker(bind=engine)
@@ -150,6 +151,8 @@ class Content(db.Model):
     text = db.Column(db.Text, nullable=False)
     block_id = db.Column(db.Integer, db.ForeignKey('block.id'), nullable=False)
 
+with app.app_context():
+    db.create_all()
 
 
 @app.route('/course/create_new_course', methods=['GET', 'POST'])
@@ -160,26 +163,50 @@ def create_new_course():
         category = request.form['courseCategory']
         sub_category = request.form['courseSubCategory']
 
-       
-        
         new_course = Course(title=title, description=description, category=category, sub_category=sub_category)
-        
-        session = DBSession()
-        session.add(new_course)
-        session.commit()
+        db.session.add(new_course)
+        db.session.commit()
         print(f"Course '{title}' added successfully.")
         new_course_id = new_course.id
-        session.close()
+        
         return redirect(url_for('edit_course', course_id=new_course_id))
 
-    return render_template('create_new_course.html')
+    return render_template('create_new_course.html')  # This should render the template to create a new course
 
-@app.route('/course/edit_course/<int:course_id>')
+@app.route('/course/edit_course/<int:course_id>', methods=['GET', 'POST'])
 def edit_course(course_id):
-    # Logic to edit the course
-    return f"Edit course page for course ID {course_id}"
+    course = Course.query.get_or_404(course_id)
+    
+    if request.method == 'POST':
+        if 'blockTitle' in request.form:  # Adding a block
+            block_title = request.form['blockTitle']
+            parent_block_id = request.form.get('parentBlockId')  # This can be None for top-level blocks
+            new_block = Block(title=block_title, course_id=course_id, parent_block_id=parent_block_id)
+            db.session.add(new_block)
+            
+        elif 'contentTitle' in request.form:  # Adding content
+            content_title = request.form['contentTitle']
+            content_text = request.form['contentText']
+            parent_block_id = request.form['parentBlockId']
+            new_content = Content(title=content_title, text=content_text, block_id=parent_block_id)
+            db.session.add(new_content)
+        
+        db.session.commit()
 
+        return redirect(url_for('edit_course', course_id=course_id))
 
+    return render_template('edit_course.html', course=course)  # Pass the course object to the template
+
+    
+
+@app.route('/course/view_courses')
+def view_courses():
+    conn = sqlite3.connect('LMS.db')
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM course")
+    courses = cursor.fetchall()
+    conn.close()
+    return render_template('view_courses.html', courses=courses)
 
 
 # @app.errorhandler(404)
