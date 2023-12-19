@@ -172,10 +172,10 @@
                         <span>{{ block.title }}</span>
                     </div>
                     <div class="block-action-new">
-                        <a href="#" onclick="addChildBlock({{ block.id }})" class="">+ Child Block | </a>
-                        <a href="#" onclick="addContent({{ block.id }})" class="">+ Content | </a>
-                        <a href="#" onclick="addAssessment({{ block.id }})" class="">+ Assessment |</a>
-                        <a href="#" onclick="deleteBlock({{ block.id }})" class="">- Delete</a>
+                        <a href="#" onclick="addChildBlock({{ block.id }})" class="text-success">+ Child Block | </a>
+                        <a href="#" onclick="addContent({{ block.id }})" class="text-primary">+ Content | </a>
+                        <a href="#" onclick="addAssessment({{ block.id }})" class="text-primary">+ Assessment |</a>
+                        <a href="#" onclick="deleteBlock({{ block.id }})" class="text-danger">- Delete</a>
                     </div>
                 </div>
                 <div id="block-content-{{ block.id }}" class="block-content">

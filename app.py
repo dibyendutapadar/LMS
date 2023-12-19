@@ -12,7 +12,8 @@ from sqlalchemy.orm import backref
 from sqlalchemy.orm import relationship
 import pandas as pd
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
+import json
 
 
 app = Flask(__name__)
@@ -538,6 +539,123 @@ def logout():
     # Remove current_learner_id from session
     session.pop('current_learner_id', None)
     return redirect(url_for('learner_login'))
+
+
+
+# Read data from the CSV file into a dataframe
+df = pd.read_csv('learner_list.csv')
+# Convert 'date' column to datetime for easier filtering
+df['date'] = pd.to_datetime(df['date'], format='%d-%m-%Y')
+
+@app.route('/dashboard', methods=['GET', 'POST'])
+def dashboard():
+    # Set default dates
+    default_from_date = datetime(2023, 12, 1)
+    default_to_date = datetime.now() - timedelta(days=1)
+    
+    # Get filter values from the request or set to default
+    from_date = request.form.get('from_date', default_from_date.strftime('%Y-%m-%d'))
+    to_date = request.form.get('to_date', default_to_date.strftime('%Y-%m-%d'))
+    
+    # Convert string dates to datetime
+    from_date = pd.to_datetime(from_date)
+    to_date = pd.to_datetime(to_date)
+    
+    # Apply date filter
+    df_filtered = df[(df['date'] >= from_date) & (df['date'] <= to_date)]
+    
+    # KPI 1: Total Registered Learners
+    total_learners = df['learnerId'].nunique()
+    
+    # KPI 2: Learners active this week and percentage increase
+    this_week = df[(df['date'] >= to_date - timedelta(days=to_date.weekday())) & (df['date'] <= to_date)]
+    last_week = df[(df['date'] >= to_date - timedelta(days=to_date.weekday() + 7)) & (df['date'] < to_date - timedelta(days=to_date.weekday()))]
+    
+    active_learners_this_week = this_week['learnerId'].nunique()
+    active_learners_last_week = last_week['learnerId'].nunique()
+    percent_increase_learners = ((active_learners_this_week - active_learners_last_week) / active_learners_last_week) * 100 if active_learners_last_week > 0 else 0
+    
+    # KPI 3: Total Learning hours this week and percentage increase
+    learning_seconds_this_week = this_week['activeSeconds'].sum()
+    learning_seconds_last_week = last_week['activeSeconds'].sum()
+    percent_increase_hours = ((learning_seconds_this_week - learning_seconds_last_week) / learning_seconds_last_week) * 100 if learning_seconds_last_week > 0 else 0
+    
+    # Convert total learning seconds to hours
+    total_learning_hours_this_week = learning_seconds_this_week / 3600
+    
+    # Group by courseId and sum the activeSeconds for each course
+    course_activity = df_filtered.groupby('courseId')['activeSeconds'].sum().reset_index()
+    # Convert to JSON
+    course_activity_json = course_activity.to_json(orient='records')
+    course_activity_data = json.loads(course_activity_json)
+
+    # Prepare the data for the bar charts
+    # 1. Sum of activeSeconds per courseId
+    course_time_data = (
+        df_filtered.groupby('courseId')['activeSeconds']
+        .sum()
+        .sort_values(ascending=False)
+        .head(10)
+        .reset_index()
+        .to_json(orient='records')
+    )
+
+    # 2. Count of learnerId per courseId
+    course_learner_count_data = (
+        df_filtered.groupby('courseId')['learnerId']
+        .nunique()
+        .sort_values(ascending=False)
+        .head(10)
+        .reset_index()
+        .to_json(orient='records')
+    )
+
+    # 3. Sum of activeSeconds per learnerId
+    learner_time_data = (
+        df_filtered.groupby('learnerId')['activeSeconds']
+        .sum()
+        .sort_values(ascending=False)
+        .head(10)
+        .reset_index()
+        .to_json(orient='records')
+    )
+    
+    
+
+
+    formatted_from_date = from_date.strftime('%Y-%m-%d')
+    formatted_to_date = to_date.strftime('%Y-%m-%d')
+
+    # Render the HTML page with the chart data and KPIs
+    return render_template('dashboard.html', 
+                           course_activity_data=course_activity_data,
+                           total_learners=total_learners,
+                           active_learners_this_week=active_learners_this_week,
+                           percent_increase_learners=percent_increase_learners,
+                           total_learning_hours_this_week=total_learning_hours_this_week,
+                           percent_increase_hours=percent_increase_hours,
+                           formatted_from_date=formatted_from_date,
+                           formatted_to_date=formatted_to_date,
+                           course_time_data=json.loads(course_time_data),
+                           course_learner_count_data=json.loads(course_learner_count_data),
+                           learner_time_data=json.loads(learner_time_data))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 # @app.errorhandler(404)

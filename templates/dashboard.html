@@ -1,0 +1,235 @@
+{% extends 'base.html' %}
+<!-- Add CSS styles here -->
+{% block stylesheets %}
+<style>
+    body,
+    h1,
+    h2,
+    h3,
+    p {
+        margin: 0;
+        padding: 0;
+    }
+
+    body {
+        font-family: 'Arial', sans-serif;
+    }
+
+    /* Style for the KPI container */
+    .kpi-container {
+        display: flex;
+        justify-content: space-around;
+        margin: 20px 0;
+    }
+
+    /* Style for individual KPI */
+    .kpi {
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 20px;
+        text-align: center;
+        box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+        transition: 0.3s;
+        width: 30%;
+        /* Adjust the width as needed */
+    }
+
+    .kpi:hover {
+        box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.2);
+    }
+
+    /* Style for the KPI title */
+    .kpi-title {
+        color: #6c757d;
+        font-size: 16px;
+        margin-bottom: 5px;
+    }
+
+    /* Style for the KPI number */
+    .kpi-number {
+        color: #333;
+        font-size: 36px;
+        font-weight: bold;
+        margin-bottom: 5px;
+    }
+
+    /* Style for the KPI percentage change */
+    .kpi-change {
+        color: #28a745;
+        /* Green color for positive change */
+        font-size: 16px;
+        font-weight: bold;
+    }
+
+    .kpi-change.negative {
+        color: #dc3545;
+        /* Red color for negative change */
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Add a form for the date and courseId filters -->
+<form method="POST">
+    <label for="from_date">From Date:</label>
+    <input type="date" id="from_date" name="from_date" value="{{ formatted_from_date }}">
+    <label for="to_date">To Date:</label>
+    <input type="date" id="to_date" name="to_date" value="{{ formatted_to_date }}">
+    <button type="submit">Filter</button>
+</form>
+
+
+<div class="kpi-container">
+    <div class="kpi">
+        <div class="kpi-title">Total Registered Learners</div>
+        <div class="kpi-number">{{ total_learners }}</div>
+    </div>
+    <div class="kpi">
+        <div class="kpi-title">Active Learners This Week</div>
+        <div class="kpi-number">{{ active_learners_this_week }}</div>
+        <div class="kpi-change{{ ' negative' if percent_increase_learners < 0 else '' }}">
+            {{ '%+.2f' % percent_increase_learners }}% 7d
+        </div>
+    </div>
+    <div class="kpi">
+        <div class="kpi-title">Total Learning Hours This Week</div>
+        <div class="kpi-number">{{ total_learning_hours_this_week|round(2) }}</div>
+        <div class="kpi-change{{ ' negative' if percent_increase_hours < 0 else '' }}">
+            {{ '%+.2f' % percent_increase_hours }}% 7d
+        </div>
+    </div>
+</div>
+
+
+<!-- Chart container -->
+<div class="charts-container">
+    <div id="courseActivityChart" style="width: 600px;height:400px;"></div>
+    <div id="courseTimeChart" style="width: 33%; height:400px; display: inline-block;"></div>
+    <div id="courseLearnerCountChart" style="width: 33%; height:400px; display: inline-block;"></div>
+    <div id="learnerTimeChart" style="width: 33%; height:400px; display: inline-block;"></div>
+</div>
+
+{% endblock %}
+{% block script %}
+<script src="https://cdn.jsdelivr.net/npm/echarts/dist/echarts.min.js"></script>
+<script>
+    var courseTimeChart = echarts.init(document.getElementById('courseTimeChart'));
+    // var courseLearnerCountChart = echarts.init(document.getElementById('courseLearnerCountChart'));
+    // var learnerTimeChart = echarts.init(document.getElementById('learnerTimeChart'));
+
+
+    // Course Time Chart
+    var courseTimeOption = {
+        tooltip: {
+            trigger: 'axis',
+            axisPointer: {
+                type: 'shadow'
+            }
+        },
+        grid: {
+            left: '3%',
+            right: '4%',
+            bottom: '3%',
+            containLabel: true
+        },
+        xAxis: {
+            type: 'value',
+            boundaryGap: [0, 0.01]
+        },
+        yAxis: {
+        type: 'category',
+        data: {{ course_time_data|map(attribute='courseId')|list|tojson|safe }}
+    },
+    series: [
+        {
+            type: 'bar',
+            data: {{ course_time_data|map(attribute='activeSeconds')|list|tojson|safe }}
+        }
+    ]
+    };
+    console.log(courseTimeOption);
+    courseTimeChart.setOption(courseTimeOption);
+
+    // Course Learner Count Chart
+    // var courseLearnerCountChart = echarts.init(document.getElementById('courseLearnerCountChart'));
+    // var courseLearnerCountOption = {
+    //     tooltip: {
+    //         trigger: 'axis',
+    //         axisPointer: {
+    //             type: 'shadow'
+    //         }
+    //     },
+    //     grid: {
+    //         left: '3%',
+    //         right: '4%',
+    //         bottom: '3%',
+    //         containLabel: true
+    //     },
+    //     xAxis: {
+    //         type: 'value',
+    //         boundaryGap: [0, 0.01]
+    //     },
+    //     yAxis: {
+    //         type: 'category',
+    //         data: {
+    //             {
+    //                 course_learner_count_data | map(attribute = 'courseId') | list | tojson | safe
+    //             }
+    //         }
+    //     },
+    //     series: [{
+    //         type: 'bar',
+    //         data: {
+    //             {
+    //                 course_learner_count_data | map(attribute = 'learnerId') | list | tojson | safe
+    //             }
+    //         }
+    //     }]
+    // };
+
+    // courseLearnerCountChart.setOption(courseLearnerCountOption);
+
+
+
+    // // Learner Time Chart
+    // var learnerTimeChart = echarts.init(document.getElementById('learnerTimeChart'));
+    // var learnerTimeOption = {
+    //     tooltip: {
+    //         trigger: 'axis',
+    //         axisPointer: {
+    //             type: 'shadow'
+    //         }
+    //     },
+    //     grid: {
+    //         left: '3%',
+    //         right: '4%',
+    //         bottom: '3%',
+    //         containLabel: true
+    //     },
+    //     xAxis: {
+    //         type: 'value',
+    //         boundaryGap: [0, 0.01]
+    //     },
+    //     yAxis: {
+    //         type: 'category',
+    //         data: {
+    //             {
+    //                 learner_time_data | map(attribute = 'learnerId') | list | tojson | safe
+    //             }
+    //         }
+    //     },
+    //     series: [{
+    //         type: 'bar',
+    //         data: {
+    //             {
+    //                 learner_time_data | map(attribute = 'activeSeconds') | list | tojson | safe
+    //             }
+    //         }
+    //     }]
+    // };
+    // learnerTimeChart.setOption(learnerTimeOption);
+</script>
+
+
+
+{% endblock %}
