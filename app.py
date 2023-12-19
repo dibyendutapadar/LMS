@@ -197,6 +197,7 @@ class Content(db.Model):
     block_id = db.Column(db.Integer, db.ForeignKey('block.id'), nullable=False)
     type = db.Column(db.Enum('Video', 'Text', 'PDF', 'PPT', name='content_types'), nullable=False)
     file_link = db.Column(db.String(255))  # Store file path
+    videoLink = db.Column(db.String(255))
     mastery_score = db.Column(db.Integer, default=100, nullable=False)  # Integer between 0 and 100
     completion_threshold = db.Column(JSON)
     is_shourt_course = db.Column(db.Boolean, default=False)  # New field  # If using a relational database other than PostgreSQL, consider using a serialized string
@@ -256,8 +257,30 @@ def create_new_course():
         description = request.form['courseDescription']
         category = request.form['courseCategory']
         sub_category = request.form['courseSubCategory']
+        course_short_name = request.form['course_short_name']
+        course_code = request.form['course_code']
+        course_objective_title = request.form['course_objective_title']
+        course_objective_description = request.form['course_objective_description']
+        is_shelf_one = 'is_shelf_one' in request.form
+        is_shelf_two = 'is_shelf_two' in request.form
+        is_shelf_three = 'is_shelf_three' in request.form
+        is_shelf_four = 'is_shelf_four' in request.form
+        is_shelf_five = 'is_shelf_five' in request.form
 
-        new_course = Course(title=title, description=description, category=category, sub_category=sub_category)
+        print(is_shelf_one)
+
+        file = request.files['course_display_image']
+
+        if file:
+            filename = secure_filename(file.filename)
+            file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            file.save(file_path)
+        else:
+            file_path = ''   
+
+        new_course = Course(title=title, description=description, category=category, sub_category=sub_category,course_display_image=file_path,
+        course_short_name=course_short_name,course_code=course_code,course_objective_title=course_objective_title,course_objective_description=course_objective_description,
+        is_shelf_one=is_shelf_one,is_shelf_two=is_shelf_two,is_shelf_three=is_shelf_three,is_shelf_four=is_shelf_four,is_shelf_five=is_shelf_five)
         db.session.add(new_course)
         db.session.commit()
         print(f"Course '{title}' added successfully.")
@@ -384,13 +407,27 @@ def get_content(contentId):
 @app.route('/course/edit_course/update_content/', methods=['POST'])
 def update_content():
     content_id = request.form.get('content_id')
-    title = request.form.get('content_title')
-    text = request.form.get('content_text')
+    content_title = request.form.get('content_title')
+    type = request.form.get('type')
+    content_text = request.form.get('content_text')
+    mastery_score = request.form.get('mastery_score')
+    file = request.files['file']
+
+
+    if file:
+        filename = secure_filename(file.filename)
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        file.save(file_path)
+    else:
+        file_path = ''   
 
     content = Content.query.get(content_id)
     if content:
-        content.title = title
-        content.text = text
+        content.title = content_title
+        content.text = content_text
+        content.type = type
+        content.mastery_score = mastery_score
+        content.file_link = file_path
         db.session.commit()
         return jsonify({'message': 'Content updated successfully'}), 200
     else:

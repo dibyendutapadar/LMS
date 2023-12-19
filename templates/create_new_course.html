@@ -1,73 +1,101 @@
 {% extends 'base.html' %}
 {% block title %}Create New Course{% endblock %}
+
+
 {% block stylesheets %}
 <style>
-body {
-    font-family: Arial, sans-serif;
-}
-.container {
-    width: 80%;
-    margin: 0 auto;
-}
-form {
-    margin-top: 20px;
-}
-form div {
-    margin-bottom: 10px;
-}
-label {
-    display: block;
-    margin-bottom: 5px;
-}
-input[type="text"],
-textarea,
-select {
-    width: 100%;
-    padding: 10px;
-    margin-bottom: 10px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-}
-button {
-    padding: 10px 20px;
-    background-color: #007bff;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-}
-button:hover {
-    background-color: #0056b3;
-}
+    body {
+        font-family: Arial, sans-serif;
+    }
+
+    .container {
+        width: 80%;
+        margin: 0 auto;
+    }
+
+    form {
+        margin-top: 20px;
+    }
+
+    form div {
+        margin-bottom: 10px;
+    }
+
+    label {
+        display: block;
+        margin-bottom: 5px;
+    }
+
+    input[type="text"],
+    textarea,
+    select {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 10px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
+
+    button {
+        padding: 10px 20px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    button:hover {
+        background-color: #0056b3;
+    }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="container">
-  <h1>Create New Course</h1>
-  <form action="{{ url_for('create_new_course') }}" method="post">
-      <div>
-          <label for="courseTitle">Course Title</label>
-          <input type="text" id="courseTitle" name="courseTitle" required>
-      </div>
-      <div>
-          <label for="courseDescription">Course Description</label>
-          <textarea id="courseDescription" name="courseDescription"></textarea>
-      </div>
-      <div>
-        <label for="courseCategory">Category:</label>
-        <select id="courseCategory" name="courseCategory" onchange="updateSubcategories()">
-            {% for category in categories %}
-            <option value="{{ category }}">{{ category }}</option>
-            {% endfor %}
-        </select>
-      </div>
-      <div>
-        <label for="courseSubCategory">Subcategory:</label>
-        <select id="courseSubCategory" name="courseSubCategory"></select>
-      </div>
-      <button type="submit">Create Course</button>
-  </form>
+    <h1>Create New Course</h1>
+    <form action="{{ url_for('create_new_course') }}" method="post" enctype="multipart/form-data">
+        <div>
+            <label for="courseTitle">Course Title</label>
+            <input type="text" id="courseTitle" name="courseTitle" required>
+        </div>
+        <div>
+            <label for="courseDescription">Course Description</label>
+            <textarea id="courseDescription" name="courseDescription"></textarea>
+        </div>
+        <div>
+            <label for="courseCategory">Category:</label>
+            <select id="courseCategory" name="courseCategory" onchange="updateSubcategories()">
+                {% for category in categories %}
+                <option value="{{ category }}">{{ category }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label for="courseSubCategory">Subcategory:</label>
+            <select id="courseSubCategory" name="courseSubCategory"></select>
+        </div>
+        <div>
+            <label for="displayImage">Display Image:</label>
+            <input type="file" name="course_display_image" accept="image/*">
+        </div>
+
+        <input type="text" name="course_short_name" id="course_short_name" placeholder="Short Name">
+        <input type="text" name="course_code" id="course_code" placeholder="Course Code">
+        <input type="text" name="course_objective_title" id="course_objective_title" placeholder="Objective Title">
+        <div>
+            <label for="courseObjectiveDescription">Course Objective Description</label>
+            <textarea id="course_objective_description" name="course_objective_description"></textarea>
+        </div>
+
+        <label>Shelf One: <input type="checkbox" name="is_shelf_one" id="is_shelf_one" unchecked></label>
+        <label>Shelf Two: <input type="checkbox" name="is_shelf_two" id="is_shelf_two" unchecked></label>
+        <label>Shelf Three: <input type="checkbox" name="is_shelf_three" id="is_shelf_three" unchecked></label>
+        <label>Shelf Four: <input type="checkbox" name="is_shelf_four" id="is_shelf_four" unchecked></label>
+        <label>Shelf Five: <input type="checkbox" name="is_shelf_five" id="is_shelf_five" unchecked></label>
+
+        <button type="submit">Create Course</button>
+    </form>
 </div>
 
 {% endblock %}
@@ -77,13 +105,13 @@ button:hover {
     // Function to update subcategories based on selected category
     function updateSubcategories() {
         var selectedCategory = document.getElementById("courseCategory").value;
-        var subcategories = {{ subcategories | tojson }};
+        var subcategories = {{subcategories | tojson}};
         var subcategorySelect = document.getElementById("courseSubCategory");
 
         subcategorySelect.innerHTML = ''; // Clear existing options
 
         if (selectedCategory in subcategories) {
-            subcategories[selectedCategory].forEach(function(subcat){
+            subcategories[selectedCategory].forEach(function (subcat) {
                 var option = document.createElement("option");
                 option.value = subcat;
                 option.text = subcat;
@@ -93,9 +121,13 @@ button:hover {
     }
 
     // Call updateSubcategories on page load and category change
-    document.addEventListener("DOMContentLoaded", function(){
+    document.addEventListener("DOMContentLoaded", function () {
         updateSubcategories();
         document.getElementById("courseCategory").addEventListener("change", updateSubcategories);
     });
-  </script>  
-    {% endblock %} 
+</script>
+<script>
+    CKEDITOR.replace('courseDescription');
+    CKEDITOR.replace('course_objective_description');
+</script>
+{% endblock %}

@@ -341,11 +341,15 @@
             <option value="PPT">PPT</option>
         </select><br></div>
         <div><label for="content_text">Text:</label>
-        {{ ckeditor.create(name='content_text') }}<br></div>
+            <textarea id="content_text" name="content_text"></textarea>
+        </div>
         <div><label for="file">File:</label>
-    <input type="file" id="file" name="file"><br></div>    
-
-        <div>
+    <input type="file" id="file" name="file"><br></div>  
+    <div>  
+    <label for="videoLink">Video Link:</label>
+    <input type="url" id="videoLink" name="videoLink" placeholder="Enter video URL">
+    </div>   
+    <div>
             <label for="mastery_score">Mastery Score:</label>
         <input type="number" id="mastery_score" name="mastery_score" min="0" max="100" value="100"><br>
         </div>
@@ -402,7 +406,7 @@
                     </div>
                     <div>
                         
-                        <label for="content_text">Content Text:</label>
+                        <label for="type">Content Type:</label>
                         <select id="type" name="type" value="${data.type}">
                             <option value="Video">Video</option>
                             <option value="Text">Text</option>
@@ -440,25 +444,25 @@
                     case 'gif':
                         filePreview = `<img src="/${fileLink}" alt="Image">`;
                         break;
-                        // case 'mp4':
-                        // case 'avi':
-                        // case 'mov':
-                        //     filePreview = `<video src="${fileLink}" controls></video>`;
-                        //     break;
-                        // case 'pdf':
-                        //     filePreview = `<embed src="${fileLink}" type="application/pdf" width="500" height="375">`;
-                        //     break;
-                        // case 'ppt':
-                        // case 'pptx':
-                        //     filePreview =
-                        //         `<iframe src="https://docs.google.com/gview?url=${encodeURIComponent(window.location.origin + '/' + fileLink)}&embedded=true" style="width:600px; height:400px;" frameborder="0"></iframe>`;
-                        //     break;
-                        // case 'doc':
-                        // case 'docx':
-                        //     filePreview =
-                        //         `<iframe src="https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(window.location.origin + '/' + fileLink)}" style="width:600px; height:400px;" frameborder="0"></iframe>`;
-                        //     break;
-                        //     // Add cases for other file types if needed
+                        case 'mp4':
+                        case 'avi':
+                        case 'mov':
+                            filePreview = `<video src="/${fileLink}" controls></video>`;
+                            break;
+                        case 'pdf':
+                            filePreview = `<embed src="/${fileLink}" type="application/pdf" width="500" height="375">`;
+                            break;
+                        case 'ppt':
+                        case 'pptx':
+                            filePreview =
+                                `<iframe src="https://docs.google.com/gview?url=${encodeURIComponent(window.location.origin + '/' + fileLink)}&embedded=true" style="width:600px; height:400px;" frameborder="0"></iframe>`;
+                            break;
+                        case 'doc':
+                        case 'docx':
+                            filePreview =
+                                `<iframe src="https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(window.location.origin + '/' + fileLink)}" style="width:600px; height:400px;" frameborder="0"></iframe>`;
+                            break;
+                            // Add cases for other file types if needed
                     default:
                         filePreview = 'No preview available';
                 }
@@ -503,5 +507,9 @@
     function deleteBlock(blockId) {
         console.log("coming")
     }
+</script>
+
+<script>
+    CKEDITOR.replace('content_text');
 </script>
 {% endblock %}
