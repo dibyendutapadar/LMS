@@ -65,6 +65,27 @@
         color: #dc3545;
         /* Red color for negative change */
     }
+
+  .charts-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .chart {
+    width: 33%;
+    height: 400px;
+    display: inline-block;
+    text-align: center; /* Center the image horizontally */
+  }
+
+  .chart img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain; /* This will ensure the image is scaled to be as large as possible but still be fully visible within the chart's div */
+    height: auto; /* Maintain the aspect ratio of the image */
+  }
+
 </style>
 {% endblock %}
 
@@ -103,131 +124,19 @@
 
 <!-- Chart container -->
 <div class="charts-container">
-    <div id="courseActivityChart" style="width: 600px;height:400px;"></div>
-    <div id="courseTimeChart" style="width: 33%; height:400px; display: inline-block;"></div>
-    <div id="courseLearnerCountChart" style="width: 33%; height:400px; display: inline-block;"></div>
-    <div id="learnerTimeChart" style="width: 33%; height:400px; display: inline-block;"></div>
+    <div class="chart" id="courseTimeChart">
+        <img src="{{ url_for('course_time_chart') }}" alt="Course Time Chart">
+    </div>
+    <div class="chart" id="courseLearnerCountChart">
+        <img src="{{ url_for('course_learner_count_chart') }}" alt="Course Learner Count Chart">
+    </div>
+    <div class="chart" id="learnerTimeChart">
+        <img src="{{ url_for('learner_time_chart') }}" alt="Learner Time Chart">
+    </div>
 </div>
 
 {% endblock %}
 {% block script %}
-<script src="https://cdn.jsdelivr.net/npm/echarts/dist/echarts.min.js"></script>
-<script>
-    var courseTimeChart = echarts.init(document.getElementById('courseTimeChart'));
-    // var courseLearnerCountChart = echarts.init(document.getElementById('courseLearnerCountChart'));
-    // var learnerTimeChart = echarts.init(document.getElementById('learnerTimeChart'));
-
-
-    // Course Time Chart
-    var courseTimeOption = {
-        tooltip: {
-            trigger: 'axis',
-            axisPointer: {
-                type: 'shadow'
-            }
-        },
-        grid: {
-            left: '3%',
-            right: '4%',
-            bottom: '3%',
-            containLabel: true
-        },
-        xAxis: {
-            type: 'value',
-            boundaryGap: [0, 0.01]
-        },
-        yAxis: {
-        type: 'category',
-        data: {{ course_time_data|map(attribute='courseId')|list|tojson|safe }}
-    },
-    series: [
-        {
-            type: 'bar',
-            data: {{ course_time_data|map(attribute='activeSeconds')|list|tojson|safe }}
-        }
-    ]
-    };
-    console.log(courseTimeOption);
-    courseTimeChart.setOption(courseTimeOption);
-
-    // Course Learner Count Chart
-    // var courseLearnerCountChart = echarts.init(document.getElementById('courseLearnerCountChart'));
-    // var courseLearnerCountOption = {
-    //     tooltip: {
-    //         trigger: 'axis',
-    //         axisPointer: {
-    //             type: 'shadow'
-    //         }
-    //     },
-    //     grid: {
-    //         left: '3%',
-    //         right: '4%',
-    //         bottom: '3%',
-    //         containLabel: true
-    //     },
-    //     xAxis: {
-    //         type: 'value',
-    //         boundaryGap: [0, 0.01]
-    //     },
-    //     yAxis: {
-    //         type: 'category',
-    //         data: {
-    //             {
-    //                 course_learner_count_data | map(attribute = 'courseId') | list | tojson | safe
-    //             }
-    //         }
-    //     },
-    //     series: [{
-    //         type: 'bar',
-    //         data: {
-    //             {
-    //                 course_learner_count_data | map(attribute = 'learnerId') | list | tojson | safe
-    //             }
-    //         }
-    //     }]
-    // };
-
-    // courseLearnerCountChart.setOption(courseLearnerCountOption);
-
-
-
-    // // Learner Time Chart
-    // var learnerTimeChart = echarts.init(document.getElementById('learnerTimeChart'));
-    // var learnerTimeOption = {
-    //     tooltip: {
-    //         trigger: 'axis',
-    //         axisPointer: {
-    //             type: 'shadow'
-    //         }
-    //     },
-    //     grid: {
-    //         left: '3%',
-    //         right: '4%',
-    //         bottom: '3%',
-    //         containLabel: true
-    //     },
-    //     xAxis: {
-    //         type: 'value',
-    //         boundaryGap: [0, 0.01]
-    //     },
-    //     yAxis: {
-    //         type: 'category',
-    //         data: {
-    //             {
-    //                 learner_time_data | map(attribute = 'learnerId') | list | tojson | safe
-    //             }
-    //         }
-    //     },
-    //     series: [{
-    //         type: 'bar',
-    //         data: {
-    //             {
-    //                 learner_time_data | map(attribute = 'activeSeconds') | list | tojson | safe
-    //             }
-    //         }
-    //     }]
-    // };
-    // learnerTimeChart.setOption(learnerTimeOption);
 </script>
 
 

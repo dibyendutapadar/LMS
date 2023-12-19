@@ -1,5 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Edit Course{% endblock %}
+
+
 {% block stylesheets %}
 <style>
     body {
@@ -153,6 +155,18 @@
         margin-bottom: 10px;
         border: 1px solid #ccc;
         border-radius: 4px;
+    }
+
+    .file_preview img,
+    .file_preview video,
+    .file_preview embed,
+    .file_preview iframe {
+        max-width: 100%;
+        height: auto;
+        display: block;
+        /* This centers the content in the div */
+        margin: 0 auto;
+        /* This also helps in centering the content */
     }
 </style>
 {% endblock %}
@@ -310,7 +324,7 @@
     }
 
     function addContent(blockId) {
-        
+
         // Create the form HTML
         var formHtml = `
       <form id="add-content-form">
@@ -319,11 +333,22 @@
           <label for="content_title">Content Title:</label>
           <input type="text" id="content_title" name="content_title" required>
         </div>
+        <div><label for="type">Type:</label>
+        <select id="type" name="type">
+            <option value="Video">Video</option>
+            <option value="Text">Text</option>
+            <option value="PDF">PDF</option>
+            <option value="PPT">PPT</option>
+        </select><br></div>
+        <div><label for="content_text">Text:</label>
+        {{ ckeditor.create(name='content_text') }}<br></div>
+        <div><label for="file">File:</label>
+    <input type="file" id="file" name="file"><br></div>    
+
         <div>
-          <label for="content_text">Content Text:</label>
-          <textarea id="content_text" name="content_text" required></textarea>
+            <label for="mastery_score">Mastery Score:</label>
+        <input type="number" id="mastery_score" name="mastery_score" min="0" max="100" value="100"><br>
         </div>
-        <div>
           <button type="button" onclick="submitContentForm()">Add Content</button>
         </div>
       </form>
@@ -336,7 +361,7 @@
     function submitContentForm() {
         var formElement = document.getElementById('add-content-form');
         var formData = new FormData(formElement);
-
+        console.log(formData);
         fetch('/course/edit_course/add_content', {
                 method: 'POST',
                 body: formData
@@ -364,7 +389,6 @@
         fetch(`/course/edit_course/get_content/${contentId}`)
             .then(response => response.json())
             .then(data => {
-                console.log(data);
                 var formHtml = `
                 <form id="edit-content-form">
                     <input type="hidden" name="content_id" value="${data.id}">
@@ -374,7 +398,28 @@
                     </div>
                     <div>
                         <label for="content_text">Content Text:</label>
-                        <textarea id="content_text" name="content_text" required>${data.text}</textarea>
+                        <textarea id="content_text" name="content_text">${data.text}</textarea>
+                    </div>
+                    <div>
+                        
+                        <label for="content_text">Content Text:</label>
+                        <select id="type" name="type" value="${data.type}">
+                            <option value="Video">Video</option>
+                            <option value="Text">Text</option>
+                            <option value="PDF">PDF</option>
+                            <option value="PPT">PPT</option>
+                        </select><br></div>
+                    </div>
+                    <div><label for="preview"></label>
+                        <div class="file_preview"  style="max-width: 100%; height: auto; overflow: hidden;"></div>
+                        </div>
+                    <div><label for="file">File:</label>
+                            <input type="file" id="file" name="file"><br>
+                            ${data.file_link}</div>    
+                    <div>
+                    <div>
+                        <label for="mastery_score">Mastery Score:</label>
+                        <input type="text" name="mastery_score" value="${data.mastery_score}">
                     </div>
                     <div>
                         <button type="button" onclick="submitEditContentForm()">Update</button>
@@ -382,6 +427,47 @@
                 </form>
             `;
                 document.querySelector('.edit-panel').innerHTML = formHtml;
+                const fileLink = data.file_link;
+                const fileLink_adj = fileLink.replace('static/', '')
+                const fileExtension = fileLink_adj.split('.').pop().toLowerCase();
+
+                console.log(fileLink_adj);
+                let filePreview = '';
+                switch (fileExtension) {
+                    case 'jpg':
+                    case 'jpeg':
+                    case 'png':
+                    case 'gif':
+                        filePreview = `<img src="/${fileLink}" alt="Image">`;
+                        break;
+                        // case 'mp4':
+                        // case 'avi':
+                        // case 'mov':
+                        //     filePreview = `<video src="${fileLink}" controls></video>`;
+                        //     break;
+                        // case 'pdf':
+                        //     filePreview = `<embed src="${fileLink}" type="application/pdf" width="500" height="375">`;
+                        //     break;
+                        // case 'ppt':
+                        // case 'pptx':
+                        //     filePreview =
+                        //         `<iframe src="https://docs.google.com/gview?url=${encodeURIComponent(window.location.origin + '/' + fileLink)}&embedded=true" style="width:600px; height:400px;" frameborder="0"></iframe>`;
+                        //     break;
+                        // case 'doc':
+                        // case 'docx':
+                        //     filePreview =
+                        //         `<iframe src="https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(window.location.origin + '/' + fileLink)}" style="width:600px; height:400px;" frameborder="0"></iframe>`;
+                        //     break;
+                        //     // Add cases for other file types if needed
+                    default:
+                        filePreview = 'No preview available';
+                }
+                console.log(filePreview)
+
+                document.querySelector('.file_preview').innerHTML = filePreview;
+
+
+
             })
             .catch(error => {
                 console.error('Error:', error);
@@ -417,7 +503,5 @@
     function deleteBlock(blockId) {
         console.log("coming")
     }
-
-
 </script>
 {% endblock %}

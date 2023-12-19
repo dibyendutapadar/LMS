@@ -1,8 +1,18 @@
-from flask import Flask, render_template, request, redirect, url_for, jsonify, session
+from flask import Flask, render_template, request, redirect, url_for, jsonify, session, send_file
 import sqlite3
 import math
 from flask import request
 from werkzeug.routing import BuildError
+from werkzeug.utils import secure_filename
+
+from flask_wtf import FlaskForm
+from wtforms import StringField, IntegerField, SelectField, SubmitField
+from wtforms.validators import DataRequired, Optional, NumberRange
+from flask_ckeditor import CKEditor, CKEditorField
+
+
+
+
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import create_engine, Column, Integer, String, Text
 from sqlalchemy.ext.declarative import declarative_base
@@ -14,12 +24,22 @@ import pandas as pd
 import os
 from datetime import datetime, timedelta
 import json
+import matplotlib
+from io import BytesIO
+matplotlib.use('Agg')  # Use a non-interactive backend
+from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+import matplotlib.pyplot as plt
+from sqlalchemy.dialects.postgresql import JSON
 
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///LMS.db'
+app.config['UPLOAD_FOLDER'] = 'static/uploads/'  # Folder where uploaded files will be stored
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16 MB limit
+
 db = SQLAlchemy(app)
+ckeditor = CKEditor(app)
 
 # Route for the admin dashboard
 @app.route('/')
@@ -139,10 +159,21 @@ class Course(db.Model):
     __tablename__ = 'course'
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(100), nullable=False)
-    description = db.Column(db.Text, nullable=False)
+    description = db.Column(db.Text, nullable=False)  # Modify to handle rich text with markdown
     category = db.Column(db.String(100), nullable=False)
     sub_category = db.Column(db.String(100), nullable=False)
     blocks = db.relationship('Block', backref='course', lazy=True)
+    course_short_name = db.Column(db.Text)  # Existing field
+    course_code = db.Column(db.Text)  # Existing field
+    course_objective_title = db.Column(db.Text)  # Existing field
+    course_objective_description = db.Column(db.Text)  # Existing field
+    course_display_image = db.Column(db.String(255))  # Modified to store image path
+    is_shelf_one = db.Column(db.Boolean, default=False)  # New field
+    is_shelf_two = db.Column(db.Boolean, default=False)  # New field
+    is_shelf_three = db.Column(db.Boolean, default=False)  # New field
+    is_shelf_four = db.Column(db.Boolean, default=False)  # New field
+    is_shelf_five = db.Column(db.Boolean, default=False)  # New field
+
 
 class Block(db.Model):
     __tablename__ = 'block'
@@ -155,13 +186,21 @@ class Block(db.Model):
     # 'remote_side' is used to indicate this column is on the remote side of the relationship
     parent_block = db.relationship('Block', remote_side=[id],backref=backref('children', cascade='all, delete-orphan'))
     contents = db.relationship('Content', backref='block', lazy=True)
+    block_objective_title = db.Column(db.Text)  # Existing field
+    block_objective_description = db.Column(db.Text)  # Existing field
 
 class Content(db.Model):
     __tablename__ = 'content'
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(100), nullable=False)
-    text = db.Column(db.Text, nullable=False)
+    text = db.Column(db.Text, nullable=False)  # Storing rich text in raw format
     block_id = db.Column(db.Integer, db.ForeignKey('block.id'), nullable=False)
+    type = db.Column(db.Enum('Video', 'Text', 'PDF', 'PPT', name='content_types'), nullable=False)
+    file_link = db.Column(db.String(255))  # Store file path
+    mastery_score = db.Column(db.Integer, default=100, nullable=False)  # Integer between 0 and 100
+    completion_threshold = db.Column(JSON)
+    is_shourt_course = db.Column(db.Boolean, default=False)  # New field  # If using a relational database other than PostgreSQL, consider using a serialized string
+
 
 class Category(db.Model):
     __tablename__='category'
@@ -281,17 +320,28 @@ from flask import request, jsonify
 def add_content():
     block_id = request.form.get('block_id')
     content_title = request.form.get('content_title')
+    type = request.form.get('type')
     content_text = request.form.get('content_text')
+    mastery_score = request.form.get('mastery_score')
+    file = request.files['file']
+
+    if file:
+        filename = secure_filename(file.filename)
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        file.save(file_path)
+    else:
+        file_path = ''   
 
     # Input validation, error handling, and database interaction would go here
     try:
         # Assuming you have a function to create content
-        new_content = Content(title=content_title, text=content_text, block_id=block_id)
+        new_content = Content(title=content_title, text=content_text, block_id=block_id,type=type,file_link=file_path,mastery_score=mastery_score)
         db.session.add(new_content)
         db.session.commit()
         return jsonify({'success': True, 'content_id': new_content.id})
     except Exception as e:
         # Log the exception e and return an error message
+        print(e)
         return jsonify({'success': False, 'error': 'Failed to add content'}), 500
 
 @app.route('/course/edit_course/get_block', methods=['GET'])
@@ -316,7 +366,10 @@ def get_content(contentId):
             'id': content.id,
             'title': content.title,
             'text': content.text,
-            'block_id': content.block_id
+            'block_id': content.block_id,
+            'type':content.type,
+            'file_link':content.file_link,
+            'mastery_score':content.mastery_score
             # Include any other content details you need
         }), 200
     else:
@@ -542,14 +595,60 @@ def logout():
 
 
 
-# Read data from the CSV file into a dataframe
+
+def create_bar_chart(data, labels, title, ylabel, xlabel):
+    fig, ax = plt.subplots()
+    bars = ax.barh(labels, data)
+    ax.set_xlabel(xlabel)
+    ax.set_title(title)
+    ax.set_ylabel(ylabel)
+    
+
+    for bar in bars:
+        width = bar.get_width()
+        label_x_pos = width + 1  # adjust this value to move the text left or right
+        ax.text(label_x_pos, bar.get_y() + bar.get_height() / 2, f'{width}', va='center')
+    
+    plt.tight_layout()
+    # Save the figure to a bytes buffer
+    canvas = FigureCanvas(fig)
+    buffer = BytesIO()
+    canvas.print_png(buffer)
+    buffer.seek(0)
+    plt.close(fig)
+    
+    return buffer
+
+ # Read data from the CSV file into a dataframe
 df = pd.read_csv('learner_list.csv')
-# Convert 'date' column to datetime for easier filtering
+    # Convert 'date' column to datetime for easier filtering
 df['date'] = pd.to_datetime(df['date'], format='%d-%m-%Y')
+
+@app.route('/course-time-chart')
+def course_time_chart():
+    data = df.groupby('courseId')['activeSeconds'].sum().sort_values(ascending=False).head(10)
+    buffer = create_bar_chart(data.values, data.index, 'Course Time', 'Course ID', 'Learning Time')
+    return send_file(buffer, mimetype='image/png')
+
+@app.route('/course-learner-count-chart')
+def course_learner_count_chart():
+    data = df.groupby('courseId')['learnerId'].nunique().sort_values(ascending=False).head(10)
+    buffer = create_bar_chart(data.values, data.index, 'Course Learner Count', 'Course ID', 'Registered Learners')
+    return send_file(buffer, mimetype='image/png')
+
+@app.route('/learner-time-chart')
+def learner_time_chart():
+    data = df.groupby('learnerId')['activeSeconds'].sum().sort_values(ascending=False).head(10)
+    buffer = create_bar_chart(data.values, data.index, 'Learner Time', 'Learner ID', 'Learning Time')
+    return send_file(buffer, mimetype='image/png')
+
 
 @app.route('/dashboard', methods=['GET', 'POST'])
 def dashboard():
     # Set default dates
+    
+   
+
     default_from_date = datetime(2023, 12, 1)
     default_to_date = datetime.now() - timedelta(days=1)
     
@@ -583,62 +682,20 @@ def dashboard():
     # Convert total learning seconds to hours
     total_learning_hours_this_week = learning_seconds_this_week / 3600
     
-    # Group by courseId and sum the activeSeconds for each course
-    course_activity = df_filtered.groupby('courseId')['activeSeconds'].sum().reset_index()
-    # Convert to JSON
-    course_activity_json = course_activity.to_json(orient='records')
-    course_activity_data = json.loads(course_activity_json)
-
-    # Prepare the data for the bar charts
-    # 1. Sum of activeSeconds per courseId
-    course_time_data = (
-        df_filtered.groupby('courseId')['activeSeconds']
-        .sum()
-        .sort_values(ascending=False)
-        .head(10)
-        .reset_index()
-        .to_json(orient='records')
-    )
-
-    # 2. Count of learnerId per courseId
-    course_learner_count_data = (
-        df_filtered.groupby('courseId')['learnerId']
-        .nunique()
-        .sort_values(ascending=False)
-        .head(10)
-        .reset_index()
-        .to_json(orient='records')
-    )
-
-    # 3. Sum of activeSeconds per learnerId
-    learner_time_data = (
-        df_filtered.groupby('learnerId')['activeSeconds']
-        .sum()
-        .sort_values(ascending=False)
-        .head(10)
-        .reset_index()
-        .to_json(orient='records')
-    )
-    
-    
 
 
     formatted_from_date = from_date.strftime('%Y-%m-%d')
     formatted_to_date = to_date.strftime('%Y-%m-%d')
 
     # Render the HTML page with the chart data and KPIs
-    return render_template('dashboard.html', 
-                           course_activity_data=course_activity_data,
+    return render_template('dashboard.html',
                            total_learners=total_learners,
                            active_learners_this_week=active_learners_this_week,
                            percent_increase_learners=percent_increase_learners,
                            total_learning_hours_this_week=total_learning_hours_this_week,
                            percent_increase_hours=percent_increase_hours,
                            formatted_from_date=formatted_from_date,
-                           formatted_to_date=formatted_to_date,
-                           course_time_data=json.loads(course_time_data),
-                           course_learner_count_data=json.loads(course_learner_count_data),
-                           learner_time_data=json.loads(learner_time_data))
+                           formatted_to_date=formatted_to_date)
 
 
 
@@ -674,4 +731,4 @@ def dashboard():
 #     return render_template('404.html'), 404
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, threaded=False)
