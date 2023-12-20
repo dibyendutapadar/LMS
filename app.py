@@ -318,7 +318,7 @@ def update_course(course_id):
             file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             file.save(file_path)
         else:
-            file_path = '' 
+            file_path = course.course_display_image
 
         course.course_display_image=file_path
 
@@ -647,6 +647,10 @@ def learn_get_content(content_id):
         'title': content.title,
         'text': content.text,
         'block_id': content.block_id,
+        'type':content.type,
+        'file_link':content.file_link,
+        'mastery_score':content.mastery_score,
+        'videoLink' : content.videoLink,
         'completed': completion_status == 'completed'
     }
 
@@ -655,6 +659,7 @@ def learn_get_content(content_id):
 @app.route('/log_activity', methods=['POST'])
 def log_activity():
     data = request.json
+    print(data)
     new_activity = LearnerActivity(
         learner_id=data['learner_id'],
         content_id=data['content_id'],

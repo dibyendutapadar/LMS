@@ -88,7 +88,7 @@
             {% if course.is_shelf_one %}
             <div class="col-md-3">
                 <div class="card course-card">
-                    <img class="card-img-top" src="/{{course.course_display_image }}" alt="Course Image">
+                    <img class="card-img-top" src="/{{ course.course_display_image }}" alt="Course Image">
                     <div class="card-body">
                         <h5 class="card-title">{{ course.title }}</h5>
                         <p class="card-text">{{ course.description | safe }}</p>
@@ -112,7 +112,7 @@
                 {% if course.is_shelf_two %}
                 <div class="col-md-3">
                     <div class="card course-card">
-                        <img class="card-img-top" src="/{{course.course_display_image }}" alt="Course Image">
+                        <img class="card-img-top" src="{{course.course_display_image }}" alt="Course Image">
                         <div class="card-body">
                             <h5 class="card-title">{{ course.title }}</h5>
                             <p class="card-text">{{ course.description | safe }}</p>
@@ -136,7 +136,7 @@
                     {% if course.is_shelf_three %}
                     <div class="col-md-3">
                         <div class="card course-card">
-                            <img class="card-img-top" src="/{{course.course_display_image }}" alt="Course Image">
+                            <img class="card-img-top" src="{{course.course_display_image }}" alt="Course Image">
                             <div class="card-body">
                                 <h5 class="card-title">{{ course.title }}</h5>
                                 <p class="card-text">{{ course.description | safe }}</p>

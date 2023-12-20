@@ -154,6 +154,34 @@
         border: 1px solid #ccc;
         border-radius: 4px;
     }
+
+    .tabcontent {
+        display: none;
+        padding: 6px 12px;
+        border: 1px solid #ccc;
+        border-top: none;
+    }
+
+    /* Style the buttons that are used to open the tab content */
+    .tablink {
+        background-color: inherit;
+        float: left;
+        border: none;
+        outline: none;
+        cursor: pointer;
+        padding: 14px 16px;
+        transition: background-color 0.3s;
+    }
+
+    /* Change background color of buttons on hover */
+    .tablink:hover {
+        background-color: #ddd;
+    }
+
+    /* Create an active/current tablink class */
+    .tablink.active {
+        background-color: #ccc;
+    }
 </style>
 {% endblock %}
 
@@ -162,6 +190,7 @@
 <div class="container-box">
     <div class="box box-left">
         <div class="course-structure">
+            <h3>{{course.title}}</h3>
             {% macro render_block(block) %}
             <div class="block-accordion">
                 <div class="block-header">
@@ -204,7 +233,25 @@
     </div>
     <div class="box box-right">
         <div class="edit-panel">
-            <!-- This is where the form to create/edit blocks and content will appear -->
+
+        </div>
+        <div class="course-details">
+            <nav class="course-nav">
+                <button class="tablink" onclick="openTab(event, 'About')">About</button>
+                <button class="tablink" onclick="openTab(event, 'Transcript')">Transcript</button>
+            </nav>
+            <section id="About" class="tabcontent">
+                <div>
+                <h2>About this Course</h2>
+                <p>Learn how to count without making mistakes.</p>
+            </div>
+            </section>
+            <section id="Transcript" class="tabcontent" style="display:none">
+                <div>
+                <h2>Transcript</h2>
+                <p>This is the transcript of the video...</p>
+            </div>
+            </section>
         </div>
     </div>
 </div>
@@ -220,9 +267,9 @@
         fetch(`/course/learn_course/get_content/${contentId}`)
             .then(response => response.json())
             .then(data => {
-                let buttonHtml = data.completed
-                ? `<button type="button" id="MarkComplete" class="btn-success" disabled>Completed</button>`
-                : `<button type="button" id="MarkComplete" class="btn-primary" onclick="markComplete(${contentId})">MarkComplete</button>`;
+                let buttonHtml = data.completed ?
+                    `<button type="button" id="MarkComplete" class="btn-success" disabled>Completed</button>` :
+                    `<button type="button" id="MarkComplete" class="btn-primary" onclick="markComplete(${contentId})">MarkComplete</button>`;
 
                 var formHtml = `
                 <form id="show-content-form">
@@ -230,11 +277,62 @@
                     <div>
                         <h3>${data.title}</h3>
                         <p>${data.text}</p>
-                     
+                     </div>
+                     ${data.videoLink ? `
+                    <div>
+                        <video controls>
+                        <source src="${data.videoLink}" type="video/mp4">
+                        Your browser does not support the video tag.
+                        </video>
+                    </div>
+                    ` : ''}
+                     <div>
+                    <label for="preview">Preview</label>
+                    <div class="file_preview" style="max-width: 100%; height: auto; overflow: hidden;"></div>
+                    </div>
                     <div>${buttonHtml}</div>
                 </form>
             `;
                 document.querySelector('.edit-panel').innerHTML = formHtml;
+                const fileLink = data.file_link;
+                const fileLink_adj = fileLink.replace('static/', '')
+                const fileExtension = fileLink_adj.split('.').pop().toLowerCase();
+
+
+                let filePreview = '';
+                switch (fileExtension) {
+                    case 'jpg':
+                    case 'jpeg':
+                    case 'png':
+                    case 'gif':
+                        filePreview = `<img src="/${fileLink}" alt="Image">`;
+                        break;
+                    case 'mp4':
+                    case 'avi':
+                    case 'mov':
+                        filePreview = `<video src="/${fileLink}" controls></video>`;
+                        break;
+                    case 'pdf':
+                        filePreview = `<embed src="/${fileLink}" type="application/pdf" width="500" height="375">`;
+                        break;
+                    case 'ppt':
+                    case 'pptx':
+                        filePreview =
+                            `<iframe src="https://docs.google.com/gview?url=${encodeURIComponent(window.location.origin + '/' + fileLink)}&embedded=true" style="width:600px; height:400px;" frameborder="0"></iframe>`;
+                        break;
+                    case 'doc':
+                    case 'docx':
+                        filePreview =
+                            `<iframe src="https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(window.location.origin + '/' + fileLink)}" style="width:600px; height:400px;" frameborder="0"></iframe>`;
+                        break;
+                        // Add cases for other file types if needed
+                    default:
+                        filePreview = 'No preview available';
+                }
+                console.log(filePreview)
+
+                document.querySelector('.file_preview').innerHTML = filePreview;
+
             })
             .catch(error => {
                 console.error('Error:', error);
@@ -253,7 +351,7 @@
             }
         });
 
-
+        console.log(body);
     }
 
     function markComplete(contentId) {
@@ -314,6 +412,34 @@
         window.addEventListener('beforeunload', () => {
             logActivity(editPanel.dataset.contentId, 'terminated', 'inprogress', 0);
         });
+    });
+</script>
+
+<script>
+    function openTab(evt, tabName) {
+        // Declare all variables
+        var i, tabcontent, tablinks;
+
+        // Get all elements with class="tabcontent" and hide them
+        tabcontent = document.getElementsByClassName("tabcontent");
+        for (i = 0; i < tabcontent.length; i++) {
+            tabcontent[i].style.display = "none";
+        }
+
+        // Get all elements with class="tablink" and remove the class "active"
+        tablinks = document.getElementsByClassName("tablink");
+        for (i = 0; i < tablinks.length; i++) {
+            tablinks[i].className = tablinks[i].className.replace(" active", "");
+        }
+
+        // Show the current tab, and add an "active" class to the button that opened the tab
+        document.getElementById(tabName).style.display = "block";
+        evt.currentTarget.className += " active";
+    }
+
+    // Optional: Add this if you want the first tab to be open by default on page load
+    document.addEventListener('DOMContentLoaded', function () {
+        document.getElementById("defaultOpen").click();
     });
 </script>
 

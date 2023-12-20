@@ -95,11 +95,11 @@
             <textarea id="course_objective_description" name="course_objective_description"></textarea>
         </div>
 
-        <label>Shelf One: <input type="checkbox" name="is_shelf_one" id="is_shelf_one" unchecked></label>
-        <label>Shelf Two: <input type="checkbox" name="is_shelf_two" id="is_shelf_two" unchecked></label>
-        <label>Shelf Three: <input type="checkbox" name="is_shelf_three" id="is_shelf_three" unchecked></label>
-        <label>Shelf Four: <input type="checkbox" name="is_shelf_four" id="is_shelf_four" unchecked></label>
-        <label>Shelf Five: <input type="checkbox" name="is_shelf_five" id="is_shelf_five" unchecked></label>
+        <label>Shelf One: <input type="checkbox" name="is_shelf_one" id="is_shelf_one" {% if course.is_shelf_one =  %} checked {% endif %}></label>
+        <label>Shelf Two: <input type="checkbox" name="is_shelf_two" id="is_shelf_two" {% if course.is_shelf_one = 1 %} checked {% endif %}></label>
+        <label>Shelf Three: <input type="checkbox" name="is_shelf_three" id="is_shelf_three" {% if course.is_shelf_one %} unchecked {% endif %}></label>
+        <label>Shelf Four: <input type="checkbox" name="is_shelf_four" id="is_shelf_four" {% if course.is_shelf_one %} unchecked {% endif %}></label>
+        <label>Shelf Five: <input type="checkbox" name="is_shelf_five" id="is_shelf_five" {% if course.is_shelf_one %} unchecked {% endif %}></label>
 
         <button type="submit">Update Course</button>
     </form>
