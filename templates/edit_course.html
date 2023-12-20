@@ -172,13 +172,17 @@
             width: 100%;
             height: auto;
         }
+
+        
 </style>
 {% endblock %}
 <!-- Add your meta tags, title, and CSS links -->
 
 
 {% block content %}
-<a href="{{ url_for('update_course', course_id=course.id) }}">Update Parent Course Details</a></td>
+<div class="container-top">
+<a href="{{ url_for('update_course', course_id=course.id) }}" class="btn btn-success mb-3 right-link" >Update Parent Course Details</a></td>
+</div>
 <div class="container-box">
     <div class="box box-left">
         <div class="course-structure">
@@ -228,6 +232,7 @@
         </div>
     </div>
 </div>
+
 {% endblock %}
 
 {% block script %}

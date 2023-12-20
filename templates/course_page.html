@@ -40,7 +40,7 @@
 {% block content %}
 <div class="course-header">
     <h1>{{ course.title }}</h1>
-    <p>{{ course.description }}</p>
+    <p>{{ course.description | safe}} </p>
     <h5>Category: {{ course.category }}</h5>
     <h6>Sub-Category: {{ course.sub_category }}</h6>
     {% if user_enrolled %}

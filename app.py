@@ -267,7 +267,6 @@ def create_new_course():
         is_shelf_four = 'is_shelf_four' in request.form
         is_shelf_five = 'is_shelf_five' in request.form
 
-        print(is_shelf_one)
 
         file = request.files['course_display_image']
 
@@ -298,12 +297,31 @@ def update_course(course_id):
     course = Course.query.get_or_404(course_id)
     
     if request.method == 'POST':
-        course.id = request.form ['id']
         course.title = request.form['courseTitle']
         course.description = request.form['courseDescription']
         course.category = request.form['courseCategory']
         course.sub_category = request.form['courseSubCategory']
-        # ... handle other fields similarly
+        course.course_short_name = request.form['course_short_name']
+        course.course_code = request.form['course_code']
+        course.course_objective_title = request.form['course_objective_title']
+        course.course_objective_description = request.form['course_objective_description']
+        course.is_shelf_one = 'is_shelf_one' in request.form
+        course.is_shelf_two = 'is_shelf_two' in request.form
+        course.is_shelf_three = 'is_shelf_three' in request.form
+        course.is_shelf_four = 'is_shelf_four' in request.form
+        course.is_shelf_five = 'is_shelf_five' in request.form
+
+        file = request.files['course_display_image']
+
+        if file:
+            filename = secure_filename(file.filename)
+            file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            file.save(file_path)
+        else:
+            file_path = '' 
+
+        course.course_display_image=file_path
+
 
         db.session.commit()
         return redirect(url_for('edit_course', course_id=course_id)) # Redirect to another page after update

@@ -54,10 +54,18 @@
 {% block content %}
 <div class="container">
     <h1>Update Course</h1>
-    <form action="{{ url_for('update_course', course_id=1) }}" method="post" enctype="multipart/form-data">
+    <form action="{{ url_for('update_course', course_id=course.id) }}" method="post" enctype="multipart/form-data">
         <input type="hidden" name="id" value="{{ course.id }}">
         <div>
-            <label for="courseTitle"></label>
+            <label for="preview"></label>
+            <div class="file_preview" style="width: 20%; height: auto; object-fit:cover"><img src="/{{course.course_display_image}}"></div>
+        </div>
+        <div>
+            <label for="displayImage">Display Image:</label>
+            <input type="file" name="course_display_image" accept="image/*">
+        </div>
+        <div>
+            <label for="courseTitle">Course Title</label>
             <input type="text" id="courseTitle" name="courseTitle" value="{{course.title}}" required>
         </div>
         <div>
@@ -77,10 +85,7 @@
             <label for="courseSubCategory">Subcategory:</label>
             <select id="courseSubCategory" name="courseSubCategory" value="{{course.sub_category}}"></select>
         </div>
-        <div>
-            <label for="displayImage">Display Image:</label>
-            <input type="file" name="course_display_image" accept="image/*">
-        </div>
+        
 
         <input type="text" name="course_short_name" id="course_short_name" placeholder="Short Name">
         <input type="text" name="course_code" id="course_code" placeholder="Course Code">
