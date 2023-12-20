@@ -1,0 +1,135 @@
+{% extends 'base.html' %}
+{% block title %}Create New Course{% endblock %}
+
+
+{% block stylesheets %}
+<style>
+    body {
+        font-family: Arial, sans-serif;
+    }
+
+    .container {
+        width: 80%;
+        margin: 0 auto;
+    }
+
+    form {
+        margin-top: 20px;
+    }
+
+    form div {
+        margin-bottom: 10px;
+    }
+
+    label {
+        display: block;
+        margin-bottom: 5px;
+    }
+
+    input[type="text"],
+    textarea,
+    select {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 10px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
+
+    button {
+        padding: 10px 20px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    button:hover {
+        background-color: #0056b3;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Update Course</h1>
+    <form action="{{ url_for('update_course', course_id=1) }}" method="post" enctype="multipart/form-data">
+        <input type="hidden" name="id" value="{{ course.id }}">
+        <div>
+            <label for="courseTitle"></label>
+            <input type="text" id="courseTitle" name="courseTitle" value="{{course.title}}" required>
+        </div>
+        <div>
+            <label for="courseDescription">Course Description</label>
+            <textarea id="courseDescription" name="courseDescription">{{course.description}}</textarea>
+        </div>
+        <div>
+            <label for="courseCategory">Category:</label>
+            <select id="courseCategory" name="courseCategory" value="{{course.category}}"
+                onchange="updateSubcategories()">
+                {% for category in categories %}
+                <option value="{{ category }}">{{ category }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label for="courseSubCategory">Subcategory:</label>
+            <select id="courseSubCategory" name="courseSubCategory" value="{{course.sub_category}}"></select>
+        </div>
+        <div>
+            <label for="displayImage">Display Image:</label>
+            <input type="file" name="course_display_image" accept="image/*">
+        </div>
+
+        <input type="text" name="course_short_name" id="course_short_name" placeholder="Short Name">
+        <input type="text" name="course_code" id="course_code" placeholder="Course Code">
+        <input type="text" name="course_objective_title" id="course_objective_title" placeholder="Objective Title">
+        <div>
+            <label for="courseObjectiveDescription">Course Objective Description</label>
+            <textarea id="course_objective_description" name="course_objective_description"></textarea>
+        </div>
+
+        <label>Shelf One: <input type="checkbox" name="is_shelf_one" id="is_shelf_one" unchecked></label>
+        <label>Shelf Two: <input type="checkbox" name="is_shelf_two" id="is_shelf_two" unchecked></label>
+        <label>Shelf Three: <input type="checkbox" name="is_shelf_three" id="is_shelf_three" unchecked></label>
+        <label>Shelf Four: <input type="checkbox" name="is_shelf_four" id="is_shelf_four" unchecked></label>
+        <label>Shelf Five: <input type="checkbox" name="is_shelf_five" id="is_shelf_five" unchecked></label>
+
+        <button type="submit">Update Course</button>
+    </form>
+</div>
+
+{% endblock %}
+
+{% block script %}
+<script type="text/javascript">
+    // Function to update subcategories based on selected category
+    function updateSubcategories() {
+        var selectedCategory = document.getElementById("courseCategory").value;
+        var subcategories = {{subcategories | tojson}};
+        var subcategorySelect = document.getElementById("courseSubCategory");
+
+        subcategorySelect.innerHTML = ''; // Clear existing options
+
+        if (selectedCategory in subcategories) {
+            subcategories[selectedCategory].forEach(function (subcat) {
+                var option = document.createElement("option");
+                option.value = subcat;
+                option.text = subcat;
+                subcategorySelect.appendChild(option);
+            });
+        }
+    }
+
+    // Call updateSubcategories on page load and category change
+    document.addEventListener("DOMContentLoaded", function () {
+        updateSubcategories();
+        document.getElementById("courseCategory").addEventListener("change", updateSubcategories);
+    });
+</script>
+<script>
+    CKEDITOR.replace('courseDescription');
+    CKEDITOR.replace('course_objective_description');
+</script>
+{% endblock %}

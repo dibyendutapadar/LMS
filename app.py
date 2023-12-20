@@ -293,6 +293,28 @@ def create_new_course():
     subcategories = categories_df.groupby('Categories')['Sub-Categories'].apply(list).to_dict()
     return render_template('create_new_course.html', categories=categories,subcategories=subcategories)  # This should render the template to create a new course
 
+@app.route('/update_course/<int:course_id>', methods=['GET', 'POST'])
+def update_course(course_id):
+    course = Course.query.get_or_404(course_id)
+    
+    if request.method == 'POST':
+        course.id = request.form ['id']
+        course.title = request.form['courseTitle']
+        course.description = request.form['courseDescription']
+        course.category = request.form['courseCategory']
+        course.sub_category = request.form['courseSubCategory']
+        # ... handle other fields similarly
+
+        db.session.commit()
+        return redirect(url_for('edit_course', course_id=course_id)) # Redirect to another page after update
+    categories_df = pd.read_csv('category_sub_category.csv')
+    categories = categories_df['Categories'].unique().tolist()
+    subcategories = categories_df.groupby('Categories')['Sub-Categories'].apply(list).to_dict()
+    return render_template('update_course.html', course=course,categories=categories,subcategories=subcategories)
+
+
+
+
 @app.route('/course/edit_course/<int:course_id>', methods=['GET', 'POST'])
 def edit_course(course_id):
     course = Course.query.get_or_404(course_id)
@@ -347,7 +369,7 @@ def add_content():
     content_text = request.form.get('content_text')
     mastery_score = request.form.get('mastery_score')
     file = request.files['file']
-
+    videoLink = request.form.get('videoLink')
     if file:
         filename = secure_filename(file.filename)
         file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
@@ -358,7 +380,7 @@ def add_content():
     # Input validation, error handling, and database interaction would go here
     try:
         # Assuming you have a function to create content
-        new_content = Content(title=content_title, text=content_text, block_id=block_id,type=type,file_link=file_path,mastery_score=mastery_score)
+        new_content = Content(title=content_title, text=content_text, block_id=block_id,type=type,file_link=file_path,mastery_score=mastery_score,videoLink=videoLink)
         db.session.add(new_content)
         db.session.commit()
         return jsonify({'success': True, 'content_id': new_content.id})
@@ -392,7 +414,8 @@ def get_content(contentId):
             'block_id': content.block_id,
             'type':content.type,
             'file_link':content.file_link,
-            'mastery_score':content.mastery_score
+            'mastery_score':content.mastery_score,
+            'videoLink' : content.videoLink
             # Include any other content details you need
         }), 200
     else:
@@ -412,6 +435,7 @@ def update_content():
     content_text = request.form.get('content_text')
     mastery_score = request.form.get('mastery_score')
     file = request.files['file']
+    videoLink =request.form.get('videoLink')
 
 
     if file:
@@ -428,6 +452,7 @@ def update_content():
         content.type = type
         content.mastery_score = mastery_score
         content.file_link = file_path
+        content.videoLink = videoLink
         db.session.commit()
         return jsonify({'message': 'Content updated successfully'}), 200
     else:

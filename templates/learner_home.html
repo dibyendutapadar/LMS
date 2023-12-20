@@ -44,31 +44,52 @@
         font-size: .8rem;
         color: #777;
     }
+
+    .card-img-top {
+        height: 200px;
+        /* or any specific height you prefer */
+        width: auto;
+        /* to maintain aspect ratio */
+        object-fit: cover;
+        /* to handle different aspect ratios without distortion */
+    }
+
+    .row {
+        display: flex;
+        flex-wrap: wrap;
+    }
+
+    .card {
+        flex: 1;
+        /* Other styling for your cards */
+    }
 </style>
 {% endblock %}
 {% block content %}
-<div class="row">
+<div class="jumbotron jumbotron-fluid text-center">
+    <div class="container">
+        <h1 class="display-4">Welcome to Our Online Courses</h1>
+        <p class="lead">Start learning today with our wide range of courses!</p>
+    </div>
+</div>
+
     <!-- Side Panel for Filtering -->
-    <div class="col-md-2 filter-sidebar">
+    <!-- <div class="col-md-2 filter-sidebar">
         <div class="list-group">
             <a href="#" class="list-group-item list-group-item-action">Filter 1</a>
             <a href="#" class="list-group-item list-group-item-action">Filter 2</a>
-            <!-- More filters -->
         </div>
-    </div>
-
+    </div> -->
+<div class="container">
     <!-- Course Cards -->
-    <div class="col-md-10">
         <div class="row">
             {% for course in courses %}
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <div class="card course-card">
-                    <img class="card-img-top" src="{{ course.course_display_image }}" alt="Course Image">
+                    <img class="card-img-top" src="/{{course.course_display_image }}" alt="Course Image">
                     <div class="card-body">
                         <h5 class="card-title">{{ course.title }}</h5>
-                        <p class="card-text">{{ course.description }}</p>
-                        <p class="course-rating">⭐ 4.6 (120k reviews)</p>
-                        <p class="course-info">Beginner · Course · 1 - 3 Months</p>
+                        <p class="card-text">{{ course.description | safe }}</p>
                         {% if course.id in enrolled_course_ids %}
                         <a href="/course/{{ course.id }}" class="btn btn-success">Resume</a>
                         {% else %}
@@ -80,5 +101,20 @@
             {% endfor %}
         </div>
     </div>
-</div>
+
+
+
+
+<!-- Footer -->
+<footer class="text-muted py-4 bg-dark text-center">
+    <div class="container">
+        <p class="mb-0">Footer Information</p>
+    </div>
+</footer>
+
+{% endblock %}
+{% block script %}
+<script>
+    console.log(course.course_display_image);
+</script>
 {% endblock %}

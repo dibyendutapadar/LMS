@@ -1,0 +1,45 @@
+<form id="edit-content-form">
+    <input type="hidden" name="content_id" value="${data.id}">
+    <div>
+        <label for="content_title">Content Title:</label>
+        <input type="text" id="content_title" name="content_title" required value="${data.title}">
+    </div>
+    <div>
+        <label for="content_text">Content Text:</label>
+        <textarea id="content_text" name="content_text">${data.text}</textarea>
+    </div>
+    <div>
+        <label for="type">Content Type:</label>
+        <select id="type" name="type" value="${data.type}">
+            <option value="Video">Video</option>
+            <option value="Text">Text</option>
+            <option value="PDF">PDF</option>
+            <option value="PPT">PPT</option>
+        </select><br></div>
+    </div>
+    <div>
+        <label for="preview"></label>
+        <div class="file_preview" style="max-width: 100%; height: auto; overflow: hidden;"></div>
+    </div>
+    <div>
+        <label for="file">File:</label>
+        <input type="file" id="file" name="file"><br>
+        ${data.file_link}
+    </div>
+    <div>
+        <label for="videoPreview"></label>
+        <div class="videoPreview" style="max-width: 100%; height: auto; overflow: hidden;"></div>
+    </div>
+    <div>
+        <label for="videoLink">VideoLink:</label>
+        <input type="text" id="videoLink" name="videoLink"><br>
+        ${data.videoLink}
+    </div>
+    <div>
+        <label for="mastery_score">Mastery Score:</label>
+        <input type="text" name="mastery_score" value="${data.mastery_score}">
+    </div>
+    <div>
+        <button type="button" onclick="submitEditContentForm()">Update</button>
+    </div>
+</form>
