@@ -1,20 +1,11 @@
-<form id="show-content-form">
-    <input type="hidden" name="content_id" value="${data.id}">
-    <div>
-        <h3>${data.title}</h3>
-        <p>${data.text}</p>
-    </div>
-    ${data.videoLink ? `
-    <div>
-        <video controls>
-            <source src="${data.videoLink}" type="video/mp4">
-            Your browser does not support the video tag.
-        </video>
-    </div>
-    ` : ''}
-    <div>
-        <label for="preview">Content</label>
-        <div class="file_preview" style="max-width: 100%; height: auto; overflow: hidden;"></div>
-    </div>
-    <div>${buttonHtml}</div>
-</form>
+{% extends 'base.html' %}
+
+{% block content %}
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item active" aria-current="page">Admin</li>
+        </ol>
+    </nav>
+    <h1>Welcome to the Admin Dashboard</h1>
+    <!-- Additional content here -->
+{% endblock %}

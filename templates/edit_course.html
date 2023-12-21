@@ -343,14 +343,20 @@
           <label for="content_title">Content Title:</label>
           <input type="text" id="content_title" name="content_title" required>
         </div>
+        <div>
+          <label for="about">About Content Title:</label>
+          <textarea id="about" name="about"></textarea>
+        </div>
         <div><label for="type">Type:</label>
         <select id="type" name="type">
+            <option value="VideoLink">VideoLink</option>
             <option value="Video">Video</option>
             <option value="Text">Text</option>
+            <option value="Doc">Doc</option>
             <option value="PDF">PDF</option>
-            <option value="PPT">PPT</option>
+            <option value="PPT">PPT</option>           
         </select><br></div>
-        <div><label for="content_text">Text:</label>
+        <div><label for="content_text">Text: (if content type is Text)</label>
             <textarea id="content_text" name="content_text"></textarea>
         </div>
         <div><label for="file">File:</label>
@@ -359,6 +365,11 @@
     <label for="videoLink">Video Link:</label>
     <input type="url" id="videoLink" name="videoLink" placeholder="Enter video URL">
     </div>   
+    <div>
+          <label for="transcript">Video Transcript: (if content type is video/vieoLink) </label>
+          <textarea id="transcript" name="transcript"></textarea>
+    </div>
+     
     <div>
             <label for="mastery_score">Mastery Score:</label>
         <input type="number" id="mastery_score" name="mastery_score" min="0" max="100" value="100"><br>
@@ -415,6 +426,10 @@
         <textarea id="content_text" name="content_text">${data.text}</textarea>
     </div>
     <div>
+          <label for="about">About Content Title:</label>
+          <textarea id="about" name="about">${data.about}</textarea>
+        </div>
+    <div>
         <label for="type">Content Type:</label>
         <select id="type" name="type" value="${data.type}">
             <option value="Video">Video</option>
@@ -446,6 +461,10 @@
         <label for="videoLink">VideoLink:</label>
         <input type="text" id="videoLink" name="videoLink"><br>
         ${data.videoLink}
+    </div>
+    <div>
+          <label for="transcript">Video Transcript: (if content type is video/vieoLink) </label>
+          <textarea id="transcript" name="transcript">${data.transcript}</textarea>
     </div>
     <div>
         <label for="mastery_score">Mastery Score:</label>

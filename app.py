@@ -193,9 +193,11 @@ class Content(db.Model):
     __tablename__ = 'content'
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(100), nullable=False)
-    text = db.Column(db.Text, nullable=False)  # Storing rich text in raw format
+    about = db.Column(db.Text, nullable=False)
+    text = db.Column(db.Text, nullable=False)
+    transcript = db.Column(db.Text, nullable=False)  # Storing rich text in raw format
     block_id = db.Column(db.Integer, db.ForeignKey('block.id'), nullable=False)
-    type = db.Column(db.Enum('Video', 'Text', 'PDF', 'PPT', name='content_types'), nullable=False)
+    type = db.Column(db.Enum('VideoLink','Video', 'Text','Doc', 'PDF', 'PPT', name='content_types'), nullable=False)
     file_link = db.Column(db.String(255))  # Store file path
     videoLink = db.Column(db.String(255))
     mastery_score = db.Column(db.Integer, default=100, nullable=False)  # Integer between 0 and 100
@@ -388,6 +390,8 @@ def add_content():
     mastery_score = request.form.get('mastery_score')
     file = request.files['file']
     videoLink = request.form.get('videoLink')
+    about=request.form.get('about')
+    transcript=request.form.get('transcript')
     if file:
         filename = secure_filename(file.filename)
         file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
@@ -398,7 +402,7 @@ def add_content():
     # Input validation, error handling, and database interaction would go here
     try:
         # Assuming you have a function to create content
-        new_content = Content(title=content_title, text=content_text, block_id=block_id,type=type,file_link=file_path,mastery_score=mastery_score,videoLink=videoLink)
+        new_content = Content(title=content_title, text=content_text, block_id=block_id,type=type,file_link=file_path,mastery_score=mastery_score,videoLink=videoLink, about=about, transcript=transcript)
         db.session.add(new_content)
         db.session.commit()
         return jsonify({'success': True, 'content_id': new_content.id})
@@ -433,7 +437,9 @@ def get_content(contentId):
             'type':content.type,
             'file_link':content.file_link,
             'mastery_score':content.mastery_score,
-            'videoLink' : content.videoLink
+            'videoLink' : content.videoLink,
+            'about' : content.about,
+            'transcript': content.transcript
             # Include any other content details you need
         }), 200
     else:
@@ -452,8 +458,11 @@ def update_content():
     type = request.form.get('type')
     content_text = request.form.get('content_text')
     mastery_score = request.form.get('mastery_score')
+    about=request.form.get('about')
+    transcript=request.form.get('transcript')
     file = request.files['file']
     videoLink =request.form.get('videoLink')
+    filepath=request.form.get('file')
 
 
     if file:
@@ -461,7 +470,9 @@ def update_content():
         file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(file_path)
     else:
-        file_path = ''   
+        file_path = filepath 
+    
+
 
     content = Content.query.get(content_id)
     if content:
@@ -471,6 +482,8 @@ def update_content():
         content.mastery_score = mastery_score
         content.file_link = file_path
         content.videoLink = videoLink
+        content.about = about
+        content.transcript = transcript
         db.session.commit()
         return jsonify({'message': 'Content updated successfully'}), 200
     else:
@@ -651,7 +664,9 @@ def learn_get_content(content_id):
         'file_link':content.file_link,
         'mastery_score':content.mastery_score,
         'videoLink' : content.videoLink,
-        'completed': completion_status == 'completed'
+        'completed': completion_status == 'completed',
+        'about' : content.about,
+        'transcript' : content.transcript
     }
 
     return jsonify(data)

@@ -213,7 +213,7 @@
                     </div>
                     {% endfor %}
                     {% for content in block.contents %}
-                    <div class="content-block" id="content-block" onclick="showContent({{ content.id }})">
+                    <div class="content-block" id="content-block" onclick="contentInitialized({{content.id}});showContent({{ content.id }}) ">
                         {{ content.title }}
                         <!-- Add more content details here if necessary -->
                     </div>
@@ -233,24 +233,24 @@
     </div>
     <div class="box box-right">
         <div class="edit-panel">
-
+                <p style="display:block; height:100px" >Click on any Content from the left to view</p>
         </div>
-        <div class="course-details">
+        <div class="" style="display:none">
             <nav class="course-nav">
                 <button class="tablink" onclick="openTab(event, 'About')">About</button>
                 <button class="tablink" onclick="openTab(event, 'Transcript')">Transcript</button>
             </nav>
-            <section id="About" class="tabcontent">
+            <section id="About" class="tabcontent" style="display:none">
                 <div>
-                <h2>About this Course</h2>
-                <p>Learn how to count without making mistakes.</p>
-            </div>
+                    <h2></h2>
+                    <p id="about" class="about" style="display:none"></p>
+                </div>
             </section>
             <section id="Transcript" class="tabcontent" style="display:none">
                 <div>
-                <h2>Transcript</h2>
-                <p>This is the transcript of the video...</p>
-            </div>
+                    <h2></h2>
+                    <p id="transcript" class="transcript" style="display:none"></p>
+                </div>
             </section>
         </div>
     </div>
@@ -280,10 +280,11 @@
                      </div>
                      ${data.videoLink ? `
                     <div>
-                        <video controls>
+                        <video id="myVideo" controls>
                         <source src="${data.videoLink}" type="video/mp4">
                         Your browser does not support the video tag.
                         </video>
+                        <div id="watchedTime">Watched time: 0 seconds</div>
                     </div>
                     ` : ''}
                      <div>
@@ -291,9 +292,15 @@
                     <div class="file_preview" style="max-width: 100%; height: auto; overflow: hidden;"></div>
                     </div>
                     <div>${buttonHtml}</div>
+                    <div>
+                    <button type="button" id="goToNext" class="btn-primary" onclick="goToNext(${contentId})">Go To Next</button></div>
                 </form>
             `;
                 document.querySelector('.edit-panel').innerHTML = formHtml;
+                console.log(data.about);
+                console.log(data.file_link);
+                document.querySelector('.about').textContent += data.about;
+                document.querySelector('.transcript').textContent += data.transcript
                 const fileLink = data.file_link;
                 const fileLink_adj = fileLink.replace('static/', '')
                 const fileExtension = fileLink_adj.split('.').pop().toLowerCase();
@@ -310,7 +317,7 @@
                     case 'mp4':
                     case 'avi':
                     case 'mov':
-                        filePreview = `<video src="/${fileLink}" controls></video>`;
+                        filePreview = `<video id="myVideo" src="/${fileLink}" controls style="max-height: 500px; ></video><div id="watchedTime">Watched time: 0 seconds</div>`;
                         break;
                     case 'pdf':
                         filePreview = `<embed src="/${fileLink}" type="application/pdf" width="500" height="375">`;
@@ -332,24 +339,13 @@
                 console.log(filePreview)
 
                 document.querySelector('.file_preview').innerHTML = filePreview;
+                
 
             })
             .catch(error => {
                 console.error('Error:', error);
             });
-        fetch('/log_activity', {
-            method: 'POST',
-            body: JSON.stringify({
-                learner_id: "{{ session.get('current_learner_id') }}",
-                content_id: contentId,
-                activity: "initialized",
-                status: "inprogress",
-                percentage_complete: 0
-            }),
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
+        
 
         console.log(body);
     }
@@ -372,74 +368,41 @@
         location.reload();
     }
 
-    document.addEventListener('DOMContentLoaded', (event) => {
-        // Example function to call the Flask backend to log the activity
-        function logActivity(contentId, activity, status, percentageComplete) {
-            fetch('/log_activity', {
-                method: 'POST',
-                body: JSON.stringify({
-                    learner_id: "{{ session.get('current_learner_id') }}",
-                    content_id: contentId,
-                    activity: "marked_completed",
-                    status: "completed",
-                    percentage_complete: percentageComplete
-                }),
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            });
-        }
-
-
-
-        // Log 'terminated' activity when the .edit-panel innerHTML changes
-        const editPanel = document.querySelector('.edit-panel');
-        const observer = new MutationObserver((mutationsList, observer) => {
-            for (const mutation of mutationsList) {
-                if (mutation.type === 'childList') {
-                    logActivity(editPanel.dataset.contentId, 'terminated', 'inprogress', 0);
-                    // Optional: observer.disconnect(); if you want to stop observing after the change
-                }
+    function contentInitialized(contentId){
+        console.log("initialized");
+        fetch('/log_activity', {
+            method: 'POST',
+            body: JSON.stringify({
+                learner_id: "{{ session.get('current_learner_id') }}",
+                content_id: contentId,
+                activity: "initialized",
+                status: "inprogress",
+                percentage_complete: 0
+            }),
+            headers: {
+                'Content-Type': 'application/json'
             }
         });
-        observer.observe(editPanel, {
-            childList: true,
-            subtree: true
-        });
-        // Use a MutationObserver or another appropriate method to detect changes
+        
+    }
 
-        // Log 'terminated' activity before the window is unloaded
-        window.addEventListener('beforeunload', () => {
-            logActivity(editPanel.dataset.contentId, 'terminated', 'inprogress', 0);
-        });
-    });
 </script>
 
 <script>
-    function openTab(evt, tabName) {
-        // Declare all variables
-        var i, tabcontent, tablinks;
+    document.addEventListener('DOMContentLoaded', (event) => {
+        let video = document.getElementById('myVideo');
+        let watchedTimeDisplay = document.getElementById('watchedTime');
+        let watchedTime = 0;
+        let lastTime = 0;
 
-        // Get all elements with class="tabcontent" and hide them
-        tabcontent = document.getElementsByClassName("tabcontent");
-        for (i = 0; i < tabcontent.length; i++) {
-            tabcontent[i].style.display = "none";
-        }
-
-        // Get all elements with class="tablink" and remove the class "active"
-        tablinks = document.getElementsByClassName("tablink");
-        for (i = 0; i < tablinks.length; i++) {
-            tablinks[i].className = tablinks[i].className.replace(" active", "");
-        }
-
-        // Show the current tab, and add an "active" class to the button that opened the tab
-        document.getElementById(tabName).style.display = "block";
-        evt.currentTarget.className += " active";
-    }
-
-    // Optional: Add this if you want the first tab to be open by default on page load
-    document.addEventListener('DOMContentLoaded', function () {
-        document.getElementById("defaultOpen").click();
+        video.addEventListener('timeupdate', function () {
+            console.log(video.currentTime);
+            if (video.currentTime > lastTime) {
+                watchedTime += video.currentTime - lastTime;
+            }
+            lastTime = video.currentTime;
+            watchedTimeDisplay.textContent = 'Watched time: ' + Math.round(watchedTime) + ' seconds';
+        });
     });
 </script>
 
