@@ -163,6 +163,7 @@ class Course(db.Model):
     category = db.Column(db.String(100), nullable=False)
     sub_category = db.Column(db.String(100), nullable=False)
     blocks = db.relationship('Block', backref='course', lazy=True)
+    level = db.Column(db.Enum('Beginner','Intermediate', 'Expert', name='content_types'), nullable=True)
     course_short_name = db.Column(db.Text)  # Existing field
     course_code = db.Column(db.Text)  # Existing field
     course_objective_title = db.Column(db.Text)  # Existing field
@@ -173,6 +174,19 @@ class Course(db.Model):
     is_shelf_three = db.Column(db.Boolean, default=False)  # New field
     is_shelf_four = db.Column(db.Boolean, default=False)  # New field
     is_shelf_five = db.Column(db.Boolean, default=False)  # New field
+    @staticmethod
+    def search(query):
+        """
+        Search for courses based on the query.
+        """
+        if not query:
+            return Course.query.all()
+        return Course.query.filter(
+            db.or_(
+                Course.title.ilike(f'%{query}%'),
+                Course.description.ilike(f'%{query}%')
+            )
+        ).all()
 
 
 class Block(db.Model):
@@ -261,6 +275,7 @@ def create_new_course():
         sub_category = request.form['courseSubCategory']
         course_short_name = request.form['course_short_name']
         course_code = request.form['course_code']
+        level = request.form['level']
         course_objective_title = request.form['course_objective_title']
         course_objective_description = request.form['course_objective_description']
         is_shelf_one = 'is_shelf_one' in request.form
@@ -279,7 +294,7 @@ def create_new_course():
         else:
             file_path = ''   
 
-        new_course = Course(title=title, description=description, category=category, sub_category=sub_category,course_display_image=file_path,
+        new_course = Course(title=title, description=description, category=category, sub_category=sub_category,course_display_image=file_path,level=level,
         course_short_name=course_short_name,course_code=course_code,course_objective_title=course_objective_title,course_objective_description=course_objective_description,
         is_shelf_one=is_shelf_one,is_shelf_two=is_shelf_two,is_shelf_three=is_shelf_three,is_shelf_four=is_shelf_four,is_shelf_five=is_shelf_five)
         db.session.add(new_course)
@@ -800,7 +815,18 @@ def dashboard():
 
 
 
-
+@app.route('/search',methods=['GET', 'POST'])
+def search():
+    if request.method == 'POST':
+        courses = Course.query.all()  # Assuming Course has a search method
+        categories = set(course.category for course in courses)
+        subcategories = set(course.sub_category for course in courses)
+        return render_template('learner_search.html', courses=courses, categories=categories, subcategories=subcategories)
+    query = request.args.get('query')
+    courses = Course.search(query)  # Assuming Course has a search method
+    categories = set(course.category for course in courses)
+    subcategories = set(course.sub_category for course in courses)
+    return render_template('learner_search.html', courses=courses, categories=categories, subcategories=subcategories)
 
 
 

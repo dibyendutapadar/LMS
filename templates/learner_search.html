@@ -1,0 +1,137 @@
+{% extends "learner_base.html" %}
+{% block stylesheets %}
+<style>
+    body {
+        background-color: #f8f9fa;
+    }
+
+    .filter-sidebar {
+        border-right: 1px solid #ddd;
+        height: 100vh;
+        padding-right: 20px;
+    }
+
+    .course-card {
+        width: 100%;
+        margin-bottom: 1.5rem;
+    }
+
+    .course-image {
+        height: 180px;
+        object-fit: cover;
+    }
+
+    .card-body {
+        padding: 1rem;
+    }
+
+    .card-title {
+        font-size: 1.1rem;
+        margin-bottom: .5rem;
+    }
+
+    .card-text {
+        font-size: .9rem;
+        color: #555;
+    }
+
+    .course-rating {
+        color: #f4c150;
+        /* A gold-like color for the stars */
+    }
+
+    .course-info {
+        font-size: .8rem;
+        color: #777;
+    }
+
+    .card-img-top {
+        height: 200px;
+        /* or any specific height you prefer */
+        width: auto;
+        /* to maintain aspect ratio */
+        object-fit: cover;
+        /* to handle different aspect ratios without distortion */
+    }
+
+    .row {
+        display: flex;
+        flex-wrap: wrap;
+    }
+
+    .card {
+        flex: 1;
+        /* Other styling for your cards */
+    }
+</style>
+{% endblock %}
+{% block content %}
+
+
+<!-- Side Panel for Filtering -->
+
+<div class="row">
+    <div class="col-md-2 filter-sidebar">
+        <form action="/search" method="post">
+            <div class="list-group">
+                <label for="categoryFilter">Category</label>
+                <select class="form-control" id="categoryFilter" name="category" multiple>
+                    {% for category in categories %}
+                    <option value="{{ category }}">{{ category }}</option>
+                    {% endfor %}
+                </select>
+
+                <label for="subcategoryFilter">Sub Category</label>
+                <select class="form-control" id="subcategoryFilter" name="subcategory" multiple>
+                    {% for subcategory in subcategories %}
+                    <option value="{{ subcategory }}">{{ subcategory }}</option>
+                    {% endfor %}
+                </select>
+
+                <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Filter</button>
+            </div>
+        </form>
+    </div>
+
+
+
+    <div class="col-md-10">
+        <div class="container">
+            <div class="row shelf_one">
+                {% for course in courses %}
+                <div class="col-md-3">
+                    <div class="card course-card">
+                        <img class="card-img-top" src="/{{ course.course_display_image }}" alt="Course Image">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ course.title }}</h5>
+                            <p class="card-text">{{ course.description | safe }}</p>
+                            {% if course.id in enrolled_course_ids %}
+                            <a href="/course/{{ course.id }}" class="btn btn-success">Resume</a>
+                            {% else %}
+                            <a href="/course/{{ course.id }}" class="btn btn-primary">Go to Course</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <p>No courses found.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- Footer -->
+<footer class="text-muted py-4 bg-dark text-center">
+    <div class="container">
+        <p class="mb-0">Footer Information</p>
+    </div>
+</footer>
+
+{% endblock %}
+{% block script %}
+<script>
+    console.log(course.course_display_image);
+</script>
+{% endblock %}

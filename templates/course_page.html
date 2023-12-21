@@ -41,8 +41,8 @@
 <div class="course-header">
     <h1>{{ course.title }}</h1>
     <p>{{ course.description | safe}} </p>
-    <h5>Category: {{ course.category }}</h5>
-    <h6>Sub-Category: {{ course.sub_category }}</h6>
+    <h5> <span class="badge badge-primary">{{ course.category }}</span></h5>
+    <h6> <span class="badge badge-secondary">{{ course.sub_category }}</span></h6>
     {% if user_enrolled %}
     <a href="/course/{{ course.id }}/resume" class="btn btn-success">Resume</a>
     {% else %}
@@ -74,12 +74,10 @@
         <!-- Sidebar for course details like reviews, level, duration, etc. -->
         <div class="col-md-4">
             <div class="info-box">
-                <h3>4.6 ⭐ (67,386 reviews)</h3>
                 <p>Beginner level</p>
                 <p>5 months at 10 hours a week</p>
                 <p>Flexible schedule</p>
                 <p>Earn degree credit</p>
-                <a href="#" class="enroll-btn">Enroll</a>
             </div>
         </div>
     </div>

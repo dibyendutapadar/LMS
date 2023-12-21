@@ -73,85 +73,115 @@
     </div>
 </div>
 
-    <!-- Side Panel for Filtering -->
-    <!-- <div class="col-md-2 filter-sidebar">
+<!-- Side Panel for Filtering -->
+<!-- <div class="col-md-2 filter-sidebar">
         <div class="list-group">
             <a href="#" class="list-group-item list-group-item-action">Filter 1</a>
             <a href="#" class="list-group-item list-group-item-action">Filter 2</a>
         </div>
     </div> -->
 <div class="container">
-    <h3>Shelf One</h3>
-    <!-- Course Cards -->
-        <div class="row shelf_one">
-            {% for course in courses %}
-            {% if course.is_shelf_one %}
-            <div class="col-md-3">
-                <div class="card course-card">
-                    <img class="card-img-top" src="/{{ course.course_display_image }}" alt="Course Image">
-                    <div class="card-body">
-                        <h5 class="card-title">{{ course.title }}</h5>
-                        <p class="card-text">{{ course.description | safe }}</p>
-                        {% if course.id in enrolled_course_ids %}
-                        <a href="/course/{{ course.id }}" class="btn btn-success">Resume</a>
-                        {% else %}
-                        <a href="/course/{{ course.id }}" class="btn btn-primary">Go to Course</a>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-            {% endif %}
-            {% endfor %}
-        </div>
-    </div>
-    <div class="container">
-        <h3>Shelf Two</h3>
-        <!-- Course Cards -->
-            <div class="row shelf_two">
-                {% for course in courses %}
-                {% if course.is_shelf_two %}
-                <div class="col-md-3">
-                    <div class="card course-card">
-                        <img class="card-img-top" src="{{course.course_display_image }}" alt="Course Image">
-                        <div class="card-body">
-                            <h5 class="card-title">{{ course.title }}</h5>
-                            <p class="card-text">{{ course.description | safe }}</p>
-                            {% if course.id in enrolled_course_ids %}
-                            <a href="/course/{{ course.id }}" class="btn btn-success">Resume</a>
-                            {% else %}
-                            <a href="/course/{{ course.id }}" class="btn btn-primary">Go to Course</a>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-                {% endif %}
-                {% endfor %}
-            </div>
-        </div>
-        <div class="container">
-            <h3>Shelf Three</h3>
-            <!-- Course Cards -->
-                <div class="row shelf_three">
-                    {% for course in courses %}
-                    {% if course.is_shelf_three %}
-                    <div class="col-md-3">
-                        <div class="card course-card">
-                            <img class="card-img-top" src="{{course.course_display_image }}" alt="Course Image">
-                            <div class="card-body">
-                                <h5 class="card-title">{{ course.title }}</h5>
-                                <p class="card-text">{{ course.description | safe }}</p>
-                                {% if course.id in enrolled_course_ids %}
-                                <a href="/course/{{ course.id }}" class="btn btn-success">Resume</a>
-                                {% else %}
-                                <a href="/course/{{ course.id }}" class="btn btn-primary">Go to Course</a>
-                                {% endif %}
-                            </div>
-                        </div>
-                    </div>
+    {% set shelf_one_exists = 1 %}
+    {% for course in courses %}
+        {% if course.is_shelf_one %}
+            {% set shelf_one_exists = 0 %}
+        {% endif %}
+    {% endfor %}
+
+
+    {% if shelf_one_exists == 1 %}
+    <h3>New Courses</h3>
+    {% endif %}
+
+    <div class="row shelf_one">
+        {% for course in courses %}
+        {% if course.is_shelf_one %}
+        <div class="col-md-3">
+            <div class="card course-card">
+                <img class="card-img-top" src="/{{ course.course_display_image }}" alt="Course Image">
+                <div class="card-body">
+                    <h5 class="card-title">{{ course.title }}</h5>
+                    <p class="card-text">{{ course.description | safe }}</p>
+                    {% if course.id in enrolled_course_ids %}
+                    <a href="/course/{{ course.id }}" class="btn btn-success">Resume</a>
+                    {% else %}
+                    <a href="/course/{{ course.id }}" class="btn btn-primary">Go to Course</a>
                     {% endif %}
-                    {% endfor %}
                 </div>
             </div>
+        </div>
+        {% endif %}
+        {% endfor %}
+    </div>
+</div>
+<div class="container">
+    {% set shelf_two_exists = false %}
+    {% for course in courses %}
+    {% if course.is_shelf_two %}
+    {% set shelf_two_exists = true %}
+    {% endif %}
+    {% endfor %}
+
+    
+    <!-- Course Cards -->
+    <div class="row shelf_two">
+        {% if shelf_two_exists %}
+        <h3>Shelf Two</h3>
+        {% endif %}
+        {% for course in courses %}
+        {% if course.is_shelf_two %}
+        <div class="col-md-3">
+            <div class="card course-card">
+                <img class="card-img-top" src="{{course.course_display_image }}" alt="Course Image">
+                <div class="card-body">
+                    <h5 class="card-title">{{ course.title }}</h5>
+                    <p class="card-text">{{ course.description | safe }}</p>
+                    {% if course.id in enrolled_course_ids %}
+                    <a href="/course/{{ course.id }}" class="btn btn-success">Resume</a>
+                    {% else %}
+                    <a href="/course/{{ course.id }}" class="btn btn-primary">Go to Course</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        {% endfor %}
+    </div>
+</div>
+<div class="container">
+    {% set shelf_three_exists = false %}
+    {% for course in courses %}
+    {% if course.is_shelf_three %}
+    {% set shelf_three_exists = true %}
+    {% endif %}
+    {% endfor %}
+
+
+    {% if shelf_three_exists %}
+    <h3>Shelf Three</h3>
+    {% endif %}
+    <!-- Course Cards -->
+    <div class="row shelf_three">
+        {% for course in courses %}
+        {% if course.is_shelf_three %}
+        <div class="col-md-3">
+            <div class="card course-card">
+                <img class="card-img-top" src="{{course.course_display_image }}" alt="Course Image">
+                <div class="card-body">
+                    <h5 class="card-title">{{ course.title }}</h5>
+                    <p class="card-text">{{ course.description | safe }}</p>
+                    {% if course.id in enrolled_course_ids %}
+                    <a href="/course/{{ course.id }}" class="btn btn-success">Resume</a>
+                    {% else %}
+                    <a href="/course/{{ course.id }}" class="btn btn-primary">Go to Course</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        {% endfor %}
+    </div>
+</div>
 
 
 
